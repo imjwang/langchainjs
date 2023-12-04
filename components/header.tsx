@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { auth } from '@/auth'
-import { clearChats } from '@/app/actions'
+// import { clearChats } from '@/app/actions'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Sidebar } from '@/components/sidebar'
 import { SidebarList } from '@/components/sidebar-list'
@@ -17,9 +17,13 @@ import { SidebarFooter } from '@/components/sidebar-footer'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { ClearHistory } from '@/components/clear-history'
 import { UserMenu } from '@/components/user-menu'
+import { createSupabaseClient } from '@/lib/serverUtils'
+import { redirect } from 'next/navigation'
 
 async function UserOrLogin() {
-  const session = await auth()
+  const supabase = createSupabaseClient()
+  const { data: { session }, error } = await supabase.auth.getSession()
+
   return (
     <>
       {session?.user ? (
@@ -29,7 +33,7 @@ async function UserOrLogin() {
           </React.Suspense>
           <SidebarFooter>
             <ThemeToggle />
-            <ClearHistory clearChats={clearChats} />
+            {/* <ClearHistory clearChats={clearChats} /> */}
           </SidebarFooter>
         </Sidebar>
       ) : (
@@ -41,7 +45,7 @@ async function UserOrLogin() {
       <div className="flex items-center">
         <IconSeparator className="w-6 h-6 text-muted-foreground/50" />
         {session?.user ? (
-          <UserMenu user={session.user} />
+          <UserMenu user={session?.user} />
         ) : (
           <Button variant="link" asChild className="-ml-2">
             <Link href="/sign-in?callbackUrl=/">Login</Link>
@@ -69,15 +73,6 @@ export function Header() {
         >
           <IconGitHub />
           <span className="hidden ml-2 md:flex">GitHub</span>
-        </a>
-        <a
-          href="https://github.com/vercel/nextjs-ai-chatbot/"
-          target="_blank"
-          className={cn(buttonVariants())}
-        >
-          <IconVercel className="mr-2" />
-          <span className="hidden sm:block">Deploy to Vercel</span>
-          <span className="sm:hidden">Deploy</span>
         </a>
       </div>
     </header>

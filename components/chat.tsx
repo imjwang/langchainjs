@@ -8,6 +8,7 @@ import { ChatPanel } from '@/components/chat-panel'
 import { EmptyScreen } from '@/components/empty-screen'
 import { ChatScrollAnchor } from '@/components/chat-scroll-anchor'
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
+import { type Chat } from '@/lib/types'
 import {
   Dialog,
   DialogContent,
@@ -16,11 +17,18 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog'
-import { useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { toast } from 'react-hot-toast'
 import { usePathname, useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
+import { useEffect, useState } from 'react'
+
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  
+)
 
 const IS_PREVIEW = process.env.VERCEL_ENV === 'preview'
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -31,12 +39,15 @@ export interface ChatProps extends React.ComponentProps<'div'> {
 export function Chat({ id, initialMessages, className }: ChatProps) {
   const router = useRouter()
   const path = usePathname()
+  const [saveChat, setSaveChat] = useState(false)
   const [previewToken, setPreviewToken] = useLocalStorage<string | null>(
     'ai-token',
     null
   )
   const [previewTokenDialog, setPreviewTokenDialog] = useState(IS_PREVIEW)
   const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
+
+
   const { messages, append, reload, stop, isLoading, input, setInput } =
     useChat({
       initialMessages,
@@ -50,13 +61,26 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
           toast.error(response.statusText)
         }
       },
-      onFinish() {
-        if (!path.includes('chat')) {
-          router.push(`/chat/${id}`, { shallow: true })
-          router.refresh()
-        }
-      }
+      onFinish : () => setSaveChat(true)
     })
+
+  useEffect(() => {
+    const t = async () => {
+      setSaveChat(false)
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data, error } = await supabase.from("history").upsert({ id, messages, user_id: user?.id }).select()
+      if (!data) return
+  
+      const {id: messageId} = data[0] as Chat
+  
+      if (!path.includes('chat')) {
+        router.push(`/chat/${messageId}`, { shallow: true })
+        router.refresh()
+      }
+    }
+    if (saveChat) t()
+  }, [saveChat, messages, path, router, id])
+
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>

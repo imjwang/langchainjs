@@ -20,7 +20,7 @@ interface SidebarItemProps {
 
 export function SidebarItem({ chat, children }: SidebarItemProps) {
   const pathname = usePathname()
-  const isActive = pathname === chat.path
+  const isActive = pathname === `/chat/${chat.id}`
 
   if (!chat?.id) return null
 
@@ -42,7 +42,7 @@ export function SidebarItem({ chat, children }: SidebarItemProps) {
         )}
       </div>
       <Link
-        href={chat.path}
+        href={`/chat/${chat.id}`}
         className={cn(
           buttonVariants({ variant: 'ghost' }),
           'group w-full pl-8 pr-16',

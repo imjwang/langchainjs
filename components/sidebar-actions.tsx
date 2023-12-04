@@ -41,14 +41,14 @@ import {
 
 interface SidebarActionsProps {
   chat: Chat
-  removeChat: (args: { id: string; path: string }) => ServerActionResult<void>
-  shareChat: (chat: Chat) => ServerActionResult<Chat>
+  removeChat: (id: string) => ServerActionResult<void>
+  // shareChat: (chat: Chat) => ServerActionResult<Chat>
 }
 
 export function SidebarActions({
   chat,
   removeChat,
-  shareChat
+  // shareChat
 }: SidebarActionsProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [shareDialogOpen, setShareDialogOpen] = React.useState(false)
@@ -149,14 +149,15 @@ export function SidebarActions({
                     return
                   }
 
-                  const result = await shareChat(chat)
+                  // const result = await shareChat(chat)
+                  toast.error('Sharing is not available yet')
 
-                  if (result && 'error' in result) {
-                    toast.error(result.error)
-                    return
-                  }
+                  // if (result && 'error' in result) {
+                  //   toast.error(result.error)
+                  //   return
+                  // }
 
-                  copyShareLink(result)
+                  // copyShareLink(result)
                 })
               }}
             >
@@ -190,10 +191,7 @@ export function SidebarActions({
               onClick={event => {
                 event.preventDefault()
                 startRemoveTransition(async () => {
-                  const result = await removeChat({
-                    id: chat.id,
-                    path: chat.path
-                  })
+                  const result = await removeChat(chat.id)
 
                   if (result && 'error' in result) {
                     toast.error(result.error)

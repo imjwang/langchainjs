@@ -20,7 +20,7 @@ export async function SidebarList({ userId }: SidebarListProps) {
                   <SidebarActions
                     chat={chat}
                     removeChat={removeChat}
-                    shareChat={shareChat}
+                    // shareChat={shareChat}
                   />
                 </SidebarItem>
               )
