@@ -17,7 +17,11 @@ export interface ChatPanelProps
     | 'input'
     | 'setInput'
   > {
-  id?: string
+  id?: string,
+  chain: string,
+  setChain: (chain: string) => void,
+  index: string,
+  setIndex: (index: string) => void,
 }
 
 export function ChatPanel({
@@ -28,7 +32,11 @@ export function ChatPanel({
   reload,
   input,
   setInput,
-  messages
+  messages,
+  chain,
+  setChain,
+  index,
+  setIndex
 }: ChatPanelProps) {
   return (
     <div className="fixed inset-x-0 bottom-0 bg-gradient-to-b from-muted/10 from-10% to-muted/30 to-50%">
@@ -58,7 +66,12 @@ export function ChatPanel({
           )}
         </div>
         <div className="space-y-2 border-t bg-background p-4 shadow-lg sm:rounded-t-xl sm:border">
-          <ChainSelect />
+          <ChainSelect 
+            chain={chain}
+            setChain={setChain}
+            index={index}
+            setIndex={setIndex}
+          />
           <PromptForm
             onSubmit={async value => {
               await append({
