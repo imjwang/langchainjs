@@ -1,7 +1,6 @@
 'use client'
 
 import Image from 'next/image'
-import { type Session } from 'next-auth'
 import { createBrowserClient } from '@supabase/ssr'
 
 import { Button } from '@/components/ui/button'
@@ -16,7 +15,7 @@ import { IconExternalLink } from '@/components/ui/icons'
 import { useRouter } from 'next/navigation'
 
 export interface UserMenuProps {
-  user: Session['user']
+  user: any
 }
 
 function getUserInitials(name: string) {
