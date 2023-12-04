@@ -61,7 +61,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
     const t = async () => {
       setSaveChat(false)
       const { data: { user } } = await supabase.auth.getUser()
-      const { data, error } = await supabase.from("history").upsert({ id, messages, user_id: user?.id }).select()
+      const { data, error } = await supabase.from("history").upsert({ id, messages, user_id: user?.id, title: messages[0].content.slice(0, 30) }).select()
       if (!data) return
   
       const {id: messageId} = data[0] as Chat
