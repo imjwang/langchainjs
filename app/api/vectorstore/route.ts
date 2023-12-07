@@ -30,19 +30,12 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 export async function POST(req: Request) {
   const supabase = createSupabaseClient()
 
-  const vectorstore = await SupabaseVectorStore.fromExistingIndex(
-    new OpenAIEmbeddings(), 
-  {
-    client: supabase,
-    tableName: "documents",
-    queryName: "match_documents"
-  }
-  )
-
+  
   const formData = await req.formData()
-
+  const index = formData.get('index') as string
+  
   const files = formData.getAll('files')
-
+  
   const splitter = new RecursiveCharacterTextSplitter({
     chunkSize: 2000,
     chunkOverlap: 200,
@@ -50,13 +43,22 @@ export async function POST(req: Request) {
   
   
   const documents = []
-
+  
   for (const file of files) {
     const loader = new TextLoader(file)
     const splitDocs = await loader.loadAndSplit(splitter)
     documents.push(...splitDocs)
   }
   
+  const vectorstore = await SupabaseVectorStore.fromExistingIndex(
+    new OpenAIEmbeddings(), 
+  {
+    client: supabase,
+    tableName: index,
+    queryName: "match_documents"
+  }
+  )
+
   const res = await vectorstore.addDocuments(documents)
 
   // console.log(res)

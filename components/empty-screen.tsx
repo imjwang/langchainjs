@@ -20,6 +20,24 @@ const exampleMessages = [
 ]
 
 export function EmptyScreen({ setInput }: Pick<UseChatHelpers, 'setInput'>) {
+  const handleClick = async () => {
+    const res = await fetch('api/retrieval/collection', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          tableName: 'guyygtyttttt',
+          })
+        })
+        const data = await res.json()
+        console.log(data)
+  }
+  const handleClick2 = async () => {
+    const res = await fetch('api/retrieval/collection')
+        const data = await res.json()
+        console.log(data)
+  }
   return (
     <div className="mx-auto max-w-2xl px-4">
       <div className="rounded-lg border bg-background p-8">
@@ -28,6 +46,8 @@ export function EmptyScreen({ setInput }: Pick<UseChatHelpers, 'setInput'>) {
         </h1>
         <p className="mb-2 leading-normal text-muted-foreground">
           This is an open source AI chatbot app template built with{' '}
+          <Button onClick={handleClick}>create index</Button>
+          <Button onClick={handleClick2}>get indexes</Button>
           <ExternalLink href="https://nextjs.org">Next.js</ExternalLink> and{' '}
           <ExternalLink href="https://vercel.com/storage/kv">
             Vercel KV
