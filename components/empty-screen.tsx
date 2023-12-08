@@ -1,8 +1,8 @@
 import { UseChatHelpers } from 'ai/react'
 
 import { Button } from '@/components/ui/button'
-import { ExternalLink } from '@/components/external-link'
 import { IconArrowRight } from '@/components/ui/icons'
+import Link from 'next/link'
 
 const exampleMessages = [
   {
@@ -20,41 +20,24 @@ const exampleMessages = [
 ]
 
 export function EmptyScreen({ setInput }: Pick<UseChatHelpers, 'setInput'>) {
-  const handleClick = async () => {
-    const res = await fetch('api/retrieval/collection', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          tableName: 'guyygtyttttt',
-          })
-        })
-        const data = await res.json()
-        console.log(data)
-  }
-  const handleClick2 = async () => {
-    const res = await fetch('api/retrieval/collection')
-        const data = await res.json()
-        console.log(data)
-  }
   return (
     <div className="mx-auto max-w-2xl px-4">
       <div className="rounded-lg border bg-background p-8">
         <h1 className="mb-2 text-lg font-semibold">
-          Welcome to Next.js AI Chatbot!
+          Welcome to Langchain.js Bootcamp!
         </h1>
-        <p className="mb-2 leading-normal text-muted-foreground">
-          This is an open source AI chatbot app template built with{' '}
-          <Button onClick={handleClick}>create index</Button>
-          <Button onClick={handleClick2}>get indexes</Button>
-          <ExternalLink href="https://nextjs.org">Next.js</ExternalLink> and{' '}
-          <ExternalLink href="https://vercel.com/storage/kv">
-            Vercel KV
-          </ExternalLink>
-          .
-        </p>
         <p className="leading-normal text-muted-foreground">
+          You can test out document retrieval and creating indexes with:
+        </p>
+        <Link href="/retriever">
+          <Button>
+             Retrieval Playground
+          </Button>
+        </Link>
+        <p className="leading-normal text-muted-foreground text-sm italic">
+          You must be logged in to create indexes and query them, however, there is currently a demo dataset.
+        </p>
+        <p className="leading-normal text-muted-foreground pt-4">
           You can start a conversation here or try the following examples:
         </p>
         <div className="mt-4 flex flex-col items-start space-y-2">

@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     const splitDocs = await loader.loadAndSplit(splitter)
     documents.push(...splitDocs)
   }
-  
+
   const vectorstore = await SupabaseVectorStore.fromExistingIndex(
     new OpenAIEmbeddings(), 
   {

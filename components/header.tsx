@@ -19,6 +19,7 @@ import { ClearHistory } from '@/components/clear-history'
 import { UserMenu } from '@/components/user-menu'
 import { createSupabaseClient } from '@/lib/serverUtils'
 import { redirect } from 'next/navigation'
+import { IconHome } from '@/components/ui/icons'
 
 async function UserOrLogin() {
   const supabase = createSupabaseClient()
@@ -63,6 +64,11 @@ export function Header() {
         <React.Suspense fallback={<div className="flex-1 overflow-auto" />}>
           <UserOrLogin />
         </React.Suspense>
+        <Button variant="outline" size="icon" className="ml-2">
+        <Link href="/">
+          <IconHome />
+        </Link>
+        </Button>
       </div>
       <div className="flex items-center justify-end space-x-2">
         <a

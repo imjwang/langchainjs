@@ -9,28 +9,28 @@ export async function POST(req: Request) {
   const supabase = createSupabaseClient()
   const {data, error} = await supabase.auth.getSession()
   
-  if (!data.session?.user) {
+  
+  const { query, number, index } = await req.json()
+  
+  if (!data.session?.user && index !== 'demo') {
     return new Response('Unauthorized', {
       status: 401
     })
   }
-
-  const { messages } = await req.json()
-
-  console.log(messages)
-  const currentMessageContent = messages[messages.length - 1].content;
-  console.log(currentMessageContent)
+  
   const vectorstore = await SupabaseVectorStore.fromExistingIndex(
     new OpenAIEmbeddings(), 
     {
       client: supabase,
-      tableName: "documents",
-      queryName: "match_documents"
+      tableName: index,
+      queryName: "match_documents",
+      filter: {
+        index
+      }
     }
   )
 
-  const retriever = vectorstore.asRetriever(5)
-  const documents = await retriever.getRelevantDocuments(currentMessageContent)
+  const documents = await vectorstore.similaritySearchWithScore(query, number)
 
   return NextResponse.json({documents})
 }
