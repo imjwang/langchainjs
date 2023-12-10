@@ -9,7 +9,6 @@ export interface ChatList {
 }
 
 export function ChatList({ messages, sourcesForMessages }: ChatList) {
-  console.log(sourcesForMessages)
   if (!messages.length) {
     return null
   }

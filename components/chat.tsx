@@ -30,7 +30,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   const [saveChat, setSaveChat] = useState(false)
   // for chain select
   const [chain, setChain] = useState('/api/chat')
-  const [index, setIndex] = useState('Huberman Dataset')
+  const [index, setIndex] = useState('demo')
   // for retrieval
   const [sourcesForMessages, setSourcesForMessages] = useState<Record<string, any>>({});
 
@@ -42,6 +42,8 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       id,
       body: {
         id,
+        chain,
+        index,
       },
       onResponse(response) {
         if (response.status === 401) {

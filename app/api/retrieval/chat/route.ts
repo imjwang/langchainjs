@@ -1,184 +1,103 @@
-import { loadQAMapReduceChain } from "langchain/chains";
-import { createSupabaseClient } from "@/lib/serverUtils";
-
-import { NextRequest, NextResponse } from "next/server";
-import { Message, StreamingTextResponse } from "ai";
-
+import { StreamingTextResponse, Message } from 'ai';
+ 
+import { RemoteRunnable } from "langchain/runnables/remote"
+import { BytesOutputParser } from 'langchain/schema/output_parser';
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PromptTemplate } from "langchain/prompts";
+import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
+import { createSupabaseClient } from '@/lib/serverUtils';
+import { AIMessage, HumanMessage, SystemMessage } from "langchain/schema";
+import { HydeRetriever } from "langchain/retrievers/hyde";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai"; // Replace this with your embedding model
 import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
-import { Document } from "langchain/document";
-import {
-  RunnableSequence,
-  RunnablePassthrough,
-} from "langchain/schema/runnable";
-import {
-  BytesOutputParser,
-  StringOutputParser,
-} from "langchain/schema/output_parser";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { RunnableSequence } from "langchain/schema/runnable";
+import { formatDocumentsAsString } from "langchain/util/document";
+
+export const runtime = 'edge'
 
 
-export const runtime = "edge";
-
-
-const combineDocumentsFn = (docs: Document[], separator = "\n\n") => {
-  const serializedDocs = docs.map((doc) => doc.pageContent);
-  return serializedDocs.join(separator);
-};
-
-const formatVercelMessages = (chatHistory: Message[]) => {
-  const formattedDialogueTurns = chatHistory.map((message) => {
-    if (message.role === "user") {
-      return `Human: ${message.content}`;
-    } else if (message.role === "assistant") {
-      return `Assistant: ${message.content}`;
-    } else {
-      return `${message.role}: ${message.content}`;
+const formatMessage = (message: Message) => {
+    if (message.role === 'system') {
+      return new SystemMessage(message.content);
     }
-  });
-  return formattedDialogueTurns.join("\n");
+    else if (message.role === 'user') {
+      return new HumanMessage(message.content);
+    } else {
+      return new AIMessage(message.content);
+    }
 };
-
-const CONDENSE_QUESTION_TEMPLATE = `Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
-
-<chat_history>
-  {chat_history}
-</chat_history>
-
-Follow Up Input: {question}
-Standalone question:`;
-const condenseQuestionPrompt = PromptTemplate.fromTemplate(
-  CONDENSE_QUESTION_TEMPLATE,
-);
-
-const ANSWER_TEMPLATE = `You are an energetic talking puppy named Dana, and must answer all questions like a happy, talking dog would.
-Use lots of puns!
-
-Answer the question based only on the following context and chat history:
-<context>
-  {context}
-</context>
-
-<chat_history>
-  {chat_history}
-</chat_history>
-
-Question: {question}
-`;
-const answerPrompt = PromptTemplate.fromTemplate(ANSWER_TEMPLATE);
 
 export async function POST(req: Request) {
   const supabase = createSupabaseClient()
-
-  const vectorstore = await SupabaseVectorStore.fromExistingIndex(
-    new OpenAIEmbeddings(),
-  {
-    client: supabase,
-    tableName: "documents",
-    queryName: "match_documents"
-  }
-  )
-
-  const {data, error} = await supabase.auth.getSession()
-
+  const { data, error } = await supabase.auth.getSession()
+  
   if (!data.session?.user) {
     return new Response('Unauthorized', {
       status: 401
     })
   }
+  
+  const { messages, index } = await req.json()
 
-  const body = await req.json();
-  const messages = body.messages ?? [];
-  const previousMessages = messages.slice(0, -1);
+  const model = new ChatOpenAI({verbose: true});
+  
+  const vectorStore = await SupabaseVectorStore.fromExistingIndex(
+    new OpenAIEmbeddings(), 
+    {
+      client: supabase,
+      tableName: index,
+      queryName: "match_documents",
+      filter: {
+        index
+      }
+    }
+    )
+
+    const retriever = new HydeRetriever({
+      vectorStore,
+      llm: model,
+      k: 4,
+    });
+
+
+
+  const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage);
   const currentMessageContent = messages[messages.length - 1].content;
-  // const retriever = vectorstore.asRetriever()
-  // const { messages } = await req.json()
-  // const query = messages[messages.length - 1].content
-  // // const query = "How do I optimize dopamine?"
-  // const relevantDocs = await retriever.getRelevantDocuments(query);
+  
 
-  const model = new ChatOpenAI();
-  // const mapReduceChain = loadQAMapReduceChain(model);
+  const humanTemplate = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer. 
+  Context:
+  {context}
+  Question:
+  {question}`
 
-  // const outputParser = new BytesOutputParser();
+  const systemTemplate = `You are a helpful friend and medical professional.`
 
-  // const stream = await mapReduceChain.stream({
-  //   question: query,
-  //   input_documents: relevantDocs,
-  // });
+  const prompt = ChatPromptTemplate.fromMessages([
+    ["system", systemTemplate],
+    new MessagesPlaceholder("chatHistory"),
+    ["human", humanTemplate],
+    // try this
+    ["ai", "Let's think step by step."],
+  ])
 
-      const standaloneQuestionChain = RunnableSequence.from([
-      condenseQuestionPrompt,
-      model,
-      new StringOutputParser(),
-    ]);
-
-    let resolveWithDocuments: (value: Document[]) => void;
-    const documentPromise = new Promise<Document[]>((resolve) => {
-      resolveWithDocuments = resolve;
-    });
-
-    const retriever = vectorstore.asRetriever({
-      callbacks: [
-        {
-          handleRetrieverEnd(documents) {
-            resolveWithDocuments(documents);
-          },
-        },
-      ],
-    });
-
-    const retrievalChain = retriever.pipe(combineDocumentsFn);
-
-    const answerChain = RunnableSequence.from([
-      {
-        context: RunnableSequence.from([
-          (input) => input.question,
-          retrievalChain,
-        ]),
-        chat_history: (input) => input.chat_history,
-        question: (input) => input.question,
+  const chain = RunnableSequence.from([
+    {
+      question: (input: { question: string; chatHistory?: string }) =>
+        input.question,
+      chatHistory: (input: { question: string; chatHistory?: string }) =>
+        input.chatHistory ?? "",
+      context: async (input: { question: string; chatHistory?: string }) => {
+        const relevantDocs = await retriever.getRelevantDocuments(input.question);
+        const serialized = formatDocumentsAsString(relevantDocs);
+        return serialized;
       },
-      answerPrompt,
-      model,
-    ]);
-
-    const conversationalRetrievalQAChain = RunnableSequence.from([
-      {
-        question: standaloneQuestionChain,
-        chat_history: (input) => input.chat_history,
-      },
-      answerChain,
-      new BytesOutputParser(),
-    ]);
-
-    const stream = await conversationalRetrievalQAChain.stream({
-      question: currentMessageContent,
-      chat_history: formatVercelMessages(previousMessages),
-    });
-
-    const documents = await documentPromise;
-    const serializedSources = Buffer.from(
-      JSON.stringify(
-        documents.map((doc) => {
-          return {
-            pageContent: doc.pageContent.slice(0, 50) + "...",
-            metadata: doc.metadata,
-          };
-        }),
-      ),
-    ).toString("base64");
-
-
-
-  // return new StreamingTextResponse(stream);
-  return new StreamingTextResponse(stream, {
-    headers: {
-      "x-message-index": (previousMessages.length + 1).toString(),
-      "x-sources": serializedSources,
     },
-  });
+    prompt,
+    model,
+    new BytesOutputParser(),
+  ]);
 
-  // return NextResponse.json(result)
+  const stream = await chain.stream({question: currentMessageContent, chatHistory: formattedPreviousMessages})
+
+  return new StreamingTextResponse(stream)
 }

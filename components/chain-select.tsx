@@ -34,7 +34,7 @@ export function ChainSelect({chain, setChain, index, setIndex}: any) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent side="top">
-          <SelectItem value="Huberman Dataset">Huberman Dataset</SelectItem>
+          <SelectItem value="demo">Huberman Dataset</SelectItem>
           {/* <SelectItem value="Chat">Chat</SelectItem> */}
           </SelectContent>
         </Select>

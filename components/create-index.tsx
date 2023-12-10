@@ -62,18 +62,20 @@ export function CreateIndex({message = '+', variant="icon"}: CreateIndexProps) {
       <DialogHeader>
         <DialogTitle>Create a new Index</DialogTitle>
         <DialogDescription>
-          Upload your documents, .txt, .pdf, or .docx
+          Upload your documents, .txt, .pdf, or .csv
         </DialogDescription>
       </DialogHeader>
       <form onSubmit={handleSubmit}>
       <Label>Name</Label>
+      <div className="flex flex-col gap-2">
       <Input type="text" value={indexName} onChange={(e) => setIndexName(e.target.value)} />
-      <Input type="file" accept=".txt" className="mt-2" multiple onChange={(e) => {
+      <Input type="file" accept="text/plain, application/pdf, text/csv" multiple onChange={(e) => {
           if (e.target.files) {
             setFiles(Array.from(e.target.files));
           }
         }} />
-      <Button className="mt-3" type="submit" onClick={() => setDialogOpen(false)}>Send to server</Button>
+      <Button className="w-32 place-self-end" type="submit" onClick={() => setDialogOpen(false)}>Send</Button>
+      </div>
       </form>
       <DialogFooter className="items-center">
       </DialogFooter>

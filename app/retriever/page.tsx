@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from '@/components/ui/button'
 import { useState, useEffect } from "react"
 import { CreateIndex } from "@/components/create-index"
+import type { Document } from "langchain/document"
 
 export default function RetrievalPage() {
   const [number, setNumber] = useState('')
@@ -40,7 +41,7 @@ export default function RetrievalPage() {
           query
           })
         })
-        const {documents} = await res.json()
+        const { documents } = await res.json()
         setResults(documents)
   }
 
@@ -86,17 +87,37 @@ export default function RetrievalPage() {
       </div>
     <Textarea onBlur={(e) => setQuery(e.target.value)} defaultValue={query} />
     <div className="py-4 flex flex-col gap-4">
-        {results.map(([{pageContent}, score], id: any) => (
-          <div key={id} className="w-full p-4 bg-black">
-            <div className="text-green-500 font-bold">
-              Score: {score}
-            </div>
-            <div className="w-full h-full text-white p-4">
-              {pageContent}
-            </div>
-          </div>
+        {results.map((doc, id: any) => (
+          <DocumentResult key={id} result={doc} />
         ))}
       </div>
     </div>
+  )
+}
+
+
+function DocumentResult({result}: any) {
+  let doc = result
+  let score = null
+
+  if (Array.isArray(result)) {
+    [doc, score] = result
+  }
+
+  const { pageContent } = doc
+
+  return (
+    <div className="w-full p-4 bg-black">
+      {
+        score && (
+        <div className="text-green-500 font-bold">
+          Score: {score}
+        </div>
+        )
+      }
+    <div className="w-full h-full text-white p-4">
+      {pageContent}
+    </div>
+  </div>
   )
 }
