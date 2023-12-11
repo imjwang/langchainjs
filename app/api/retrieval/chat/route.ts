@@ -1,14 +1,16 @@
+// ai sdk
 import { StreamingTextResponse, Message } from 'ai';
- 
-import { RemoteRunnable } from "langchain/runnables/remote"
-import { BytesOutputParser } from 'langchain/schema/output_parser';
+// chat
 import { ChatOpenAI } from "langchain/chat_models/openai";
+import { BytesOutputParser } from 'langchain/schema/output_parser';
+// prompt
 import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
-import { createSupabaseClient } from '@/lib/serverUtils';
 import { AIMessage, HumanMessage, SystemMessage } from "langchain/schema";
-import { HydeRetriever } from "langchain/retrievers/hyde";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai"; // Replace this with your embedding model
+import { createSupabaseClient } from '@/lib/serverUtils';
 import { SupabaseVectorStore } from "langchain/vectorstores/supabase";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai"; // Replace this with your embedding model
+import { HydeRetriever } from "langchain/retrievers/hyde";
+// chain
 import { RunnableSequence } from "langchain/schema/runnable";
 import { formatDocumentsAsString } from "langchain/util/document";
 
@@ -56,11 +58,12 @@ export async function POST(req: Request) {
       vectorStore,
       llm: model,
       k: 4,
+      verbose: true,
     });
 
 
 
-  const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage);
+  const previousMessages = messages.slice(0, -1);
   const currentMessageContent = messages[messages.length - 1].content;
   
 
@@ -76,17 +79,17 @@ export async function POST(req: Request) {
     ["system", systemTemplate],
     new MessagesPlaceholder("chatHistory"),
     ["human", humanTemplate],
-    // try this
     ["ai", "Let's think step by step."],
   ])
 
   const chain = RunnableSequence.from([
     {
-      question: (input: { question: string; chatHistory?: string }) =>
+      question: (input: { question: string; previousMessages: Message[] }) =>
         input.question,
-      chatHistory: (input: { question: string; chatHistory?: string }) =>
-        input.chatHistory ?? "",
-      context: async (input: { question: string; chatHistory?: string }) => {
+      chatHistory: (input: { question: string; previousMessages: Message[] }) => {
+        return input.previousMessages?.map(formatMessage)
+      },
+      context: async (input: { question: string; previousMessages: Message[] }) => {
         const relevantDocs = await retriever.getRelevantDocuments(input.question);
         const serialized = formatDocumentsAsString(relevantDocs);
         return serialized;
@@ -97,7 +100,7 @@ export async function POST(req: Request) {
     new BytesOutputParser(),
   ]);
 
-  const stream = await chain.stream({question: currentMessageContent, chatHistory: formattedPreviousMessages})
+  const stream = await chain.stream({question: currentMessageContent, previousMessages})
 
   return new StreamingTextResponse(stream)
 }
