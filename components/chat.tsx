@@ -12,6 +12,7 @@ import { toast } from 'react-hot-toast'
 import { usePathname, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState } from 'react'
+import { getSaveObject } from '@/lib/chains'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,7 +64,8 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
     const t = async () => {
       setSaveChat(false)
       const { data: { user } } = await supabase.auth.getUser()
-      const { data, error } = await supabase.from("history").upsert({ id, messages, user_id: user?.id, title: messages[0].content.slice(0, 30) }).select()
+      const output = await getSaveObject(messages)
+      const { data, error } = await supabase.from("history").upsert({ id, messages, user_id: user?.id, ...output }).select()
       if (!data) return
   
       const {id: messageId} = data[0] as Chat

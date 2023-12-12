@@ -12,6 +12,7 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
+import { Badge } from '@/components/ui/badge'
 
 interface SidebarItemProps {
   chat: Chat
@@ -45,15 +46,19 @@ export function SidebarItem({ chat, children }: SidebarItemProps) {
         href={`/chat/${chat.id}`}
         className={cn(
           buttonVariants({ variant: 'ghost' }),
-          'group w-full pl-8 pr-16',
+          'group w-full pl-8 pr-16 h-fit',
           isActive && 'bg-accent'
         )}
       >
         <div
-          className="relative max-h-5 flex-1 select-none overflow-hidden text-ellipsis break-all"
+          className="relative max-h-12 flex-1 select-none overflow-hidden text-ellipsis break-all"
           title={chat.title}
         >
           <span className="whitespace-nowrap">{chat.title}</span>
+          <div className="flex gap-4">
+            <Badge style={{backgroundColor: chat.color}}>{chat.topic}</Badge>
+            <div>{chat.emotion}</div>
+          </div>
         </div>
       </Link>
       {isActive && <div className="absolute right-2 top-1">{children}</div>}

@@ -40,7 +40,7 @@ export async function POST(req: Request) {
   
   const { messages, index } = await req.json()
 
-  const model = new ChatOpenAI({verbose: true});
+  const model = new ChatOpenAI();
   
   const vectorStore = await SupabaseVectorStore.fromExistingIndex(
     new OpenAIEmbeddings(), 
