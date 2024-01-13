@@ -8,6 +8,7 @@ import { ChatPromptTemplate, MessagesPlaceholder } from "langchain/prompts";
 import { createSupabaseClient } from '@/lib/serverUtils';
 import { AIMessage, HumanMessage, SystemMessage } from "langchain/schema";
 
+
 export const runtime = 'edge'
 
 

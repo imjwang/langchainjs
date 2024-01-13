@@ -40,9 +40,6 @@ export function ChatPanel({
   index,
   setIndex
 }: ChatPanelProps) {
-  const handleClick = async () => {
-    console.log(await getSaveObject(messages))
-  }
   return (
     <div className="fixed inset-x-0 bottom-0 bg-gradient-to-b from-muted/10 from-10% to-muted/30 to-50%">
       <ButtonScrollToBottom />
@@ -69,9 +66,6 @@ export function ChatPanel({
               </Button>
             )
           )}
-          <Button onClick={handleClick}>
-              Click me
-          </Button>
         </div>
         <div className="space-y-2 border-t bg-background p-4 shadow-lg sm:rounded-t-xl sm:border">
           <ChainSelect 

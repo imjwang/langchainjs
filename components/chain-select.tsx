@@ -24,10 +24,14 @@ export function ChainSelect({chain, setChain, index, setIndex}: any) {
         </SelectTrigger>
         <SelectContent side="top">
           <SelectItem value="/api/retrieval/chat">Retrieval Augmented Chat</SelectItem>
+          <SelectItem value="/api/agent/example">Agent Example</SelectItem>
+          {/* <SelectItem value="/api/agent">Agent</SelectItem> */}
           <SelectItem value="/api/chat">Chat</SelectItem>
+          <SelectItem value="/api/prompt">Prompt</SelectItem>
+          <SelectItem value="/api/dynamic">Final</SelectItem>
         </SelectContent>
         </Select>
-      {chain.includes('/api/retrieval') && (
+      {!chain.includes('/api/chat') && (
         <>
         <Select value={index} onValueChange={setIndex}>
           <SelectTrigger className="w-fit">
