@@ -1,15 +1,17 @@
 import { Client } from "langsmith";
 import { type Dataset } from "langsmith";
-import { Button } from "@/components/ui/button";
 import { JokeDatasetManager } from "@/components/joke-dataset-manager";
 
 const client = new Client()
 
 type DatasetProps = {
-  dataset: Dataset
+  dataset: Dataset | null
 }
 
-async function Dataset({dataset}: DatasetProps) {
+async function Dataset({dataset=null}: DatasetProps) {
+  if (!dataset) {
+    return null
+  }
   return (
     <div className="p-4 w-1/2">
       <div className="bg-black p-2 text-white rounded-t-md">
@@ -48,27 +50,6 @@ async function DatasetVisualizer() {
     </>
   )
 }
-
-// async function JokeDatasetManager() {
-//   const datasetName = "jokes"
-//   const datasetsGenerator = await client.listDatasets({datasetName})
-
-//   const datasets = []
-  
-//   for await (const dataset of datasetsGenerator) {
-//     datasets.push(dataset)
-//   }
-
-//   const exists = datasets.length > 0
-
-//   return (
-//     <>
-//       {
-//         exists ? <h1>hi</h1> : <h1>Create Dataset</h1>
-//       }
-//     </>
-//   )
-// }
 
 export default function DatasetPage() {
 
