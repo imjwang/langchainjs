@@ -1,5 +1,4 @@
-import { Client } from "langsmith";
-import { type Dataset } from "langsmith";
+import { Client, type Dataset } from "langsmith";
 import { JokeDatasetManager } from "@/components/joke-dataset-manager";
 
 
@@ -55,8 +54,8 @@ export default function JokesPage() {
 
   return (
     <>
-      <DatasetVisualizer />
-      <JokeDatasetManager />
+      {/* <DatasetVisualizer />
+      <JokeDatasetManager /> */}
     </>
   )
 }
