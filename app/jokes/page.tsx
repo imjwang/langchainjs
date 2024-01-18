@@ -7,7 +7,7 @@ type DatasetProps = {
   dataset: Dataset | null
 }
 
-async function Dataset({dataset=null}: DatasetProps) {
+async function Dataset({ dataset=null }: DatasetProps) {
   if (!dataset) {
     return null
   }
@@ -30,7 +30,7 @@ async function Dataset({dataset=null}: DatasetProps) {
 
 async function DatasetVisualizer() {
   const client = new Client()
-  const datasetsGenerator = await client.listDatasets({datasetNameContains: "jokes"})
+  const datasetsGenerator = client.listDatasets({datasetNameContains: "jokes"})
   const datasets = []
   
   for await (const dataset of datasetsGenerator) {
@@ -51,7 +51,7 @@ async function DatasetVisualizer() {
   )
 }
 
-export default function Page() {
+export default function JokesPage() {
 
   return (
     <>
