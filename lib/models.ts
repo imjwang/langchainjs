@@ -16,18 +16,6 @@ import { AWSBedrockAnthropicStream, StreamingTextResponse } from 'ai';
 import { convertMessagesToPromptAnthropic } from "langchain/chat_models/bedrock"
 
 
-const formatMessage = (message: Message) => {
-  if (message.role === 'system') {
-    return new SystemMessage(message.content);
-  }
-  else if (message.role === 'user') {
-    return new HumanMessage(message.content);
-  } else {
-    return new AIMessage(message.content);
-  }
-};
-
-
 export interface BedrockAnthropicChatModelInput extends BaseChatModelParams {
   model: string;
   region: string;
@@ -67,7 +55,7 @@ export class BedrockAnthropicChat extends SimpleChatModel {
     if (typeof messages[0].content !== "string") {
       throw new Error("Multimodal messages are not supported.");
     }
-    return messages[0].content.slice(0, this.n);
+    return messages[0].content;
   }
 
   async *_streamResponseChunks(

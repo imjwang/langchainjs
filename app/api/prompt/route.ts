@@ -26,15 +26,15 @@ export async function POST(req: Request) {
     })
   }
 
-  const client = new Client({
-    apiUrl: "https://api.smith.langchain.com", // Optional: defaults to LANGCHAIN_ENDPOINT or the default url which is current
-    apiKey: process.env.LANGCHAIN_API_KEY // Optional: this defaults to LANGCHAIN_API_KEY
-  });
+  // const client = new Client({
+  //   apiUrl: "https://api.smith.langchain.com", // Optional: defaults to LANGCHAIN_ENDPOINT or the default url which is current
+  //   apiKey: process.env.LANGCHAIN_API_KEY // Optional: this defaults to LANGCHAIN_API_KEY
+  // });
   
-  const tracer = new LangChainTracer({
-    projectName: process.env.LANGCHAIN_PROJECT, // Optional: Defaults to LANGCHAIN_PROJECT, if that is not set it defaults to "default". But it might be useful to change depenging on situation
-    client
-  });
+  // const tracer = new LangChainTracer({
+  //   projectName: process.env.LANGCHAIN_PROJECT, // Optional: Defaults to LANGCHAIN_PROJECT, if that is not set it defaults to "default". But it might be useful to change depenging on situation
+  //   client
+  // });
 
 
   const moods = ["happy", "sad", "melodramatic", "crazy"]
@@ -91,6 +91,7 @@ You are having a {mood} {mood} {mood} day and just got done with {activity}.
       },
       {
         name: "characterPrompt",
+        // @ts-ignore
         prompt: formattedNestedPrompt
       },
     ],
@@ -123,7 +124,7 @@ You are having a {mood} {mood} {mood} day and just got done with {activity}.
     return options[Math.floor(Math.random() * options.length)];
   }
 
-  const lambdaMap = RunnableLambda.from(({pirate, love, general}) => {
+  const lambdaMap = RunnableLambda.from(({pirate, love, general}: any) => {
       return random([pirate, love, general])
   })
 
@@ -199,7 +200,7 @@ You are having a {mood} {mood} {mood} day and just got done with {activity}.
     outputParser,
   ])
 
-  const stream = await chain3.stream({currentMessage}, {callbacks: [tracer]})
+  const stream = await chain3.stream({currentMessage})
 
   return new StreamingTextResponse(stream)
 

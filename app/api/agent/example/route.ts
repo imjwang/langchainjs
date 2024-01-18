@@ -82,13 +82,13 @@ export async function POST(req: Request) {
   const collectionDescription = 'This is a collection of transcripts from a health and fitness podcast'
 
   
-  const retrieverTool = new DynamicTool({
-      name: 'vectorstore',
-      description: `call this to get relevent information from a vectorstore with the following description:\n${collectionDescription}\nThe input should be an object with a query property`,
-      func: getRelevantDocuments,
-    })
+  // const retrieverTool = new DynamicTool({
+  //     name: 'vectorstore',
+  //     description: `call this to get relevent information from a vectorstore with the following description:\n${collectionDescription}\nThe input should be an object with a query property`,
+  //     func: getRelevantDocuments,
+  //   })
 
-    const a = formatToOpenAITool(retrieverTool)
+    // const a = formatToOpenAITool(retrieverTool)
 
     const structuredStructuredTool = new DynamicStructuredTool({
       name: "vectorstore",
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
       new Calculator(),
     ];
 
-    console.log("a", a)
+    // console.log("a", a)
     console.log("b", b)
 
     const prompt = ChatPromptTemplate.fromMessages([

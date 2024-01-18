@@ -32,6 +32,7 @@ import { formatLogToString } from "langchain/agents/format_scratchpad/log";
 import { XMLAgentOutputParser } from "langchain/agents/xml/output_parser";
 import { renderTextDescription } from "langchain/tools/render";
 import { formatLogToMessage } from "langchain/agents/format_scratchpad/log_to_message";
+import type { Tool } from 'langchain/tools';
 
 
 export const runtime = 'edge'
