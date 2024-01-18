@@ -2,7 +2,6 @@ import { Client } from "langsmith";
 import { type Dataset } from "langsmith";
 import { JokeDatasetManager } from "@/components/joke-dataset-manager";
 
-const client = new Client()
 
 type DatasetProps = {
   dataset: Dataset | null
@@ -30,6 +29,7 @@ async function Dataset({dataset=null}: DatasetProps) {
 }
 
 async function DatasetVisualizer() {
+  const client = new Client()
   const datasetsGenerator = await client.listDatasets({datasetNameContains: "jokes"})
   const datasets = []
   
@@ -51,7 +51,7 @@ async function DatasetVisualizer() {
   )
 }
 
-export default function DatasetPage() {
+export default function Page() {
 
   return (
     <>

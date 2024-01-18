@@ -19,6 +19,7 @@ import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { DynamicStructuredTool, formatToOpenAITool, formatToOpenAIFunction } from "langchain/tools";
 import { z } from "zod";
 import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
+import { convertToOpenAIFunction } from "@langchain/core/utils/function_calling";
 import {
   AIMessage,
   HumanMessage,
@@ -147,7 +148,7 @@ export async function POST(req: Request) {
     });
 
     const modelWithFunctions = model.bind({
-      functions: [...tools.map((tool) => formatToOpenAIFunction(tool))],
+      functions: [...tools.map((tool) => convertToOpenAIFunction(tool))],
     });
 
     const runnableAgent = RunnableSequence.from([
