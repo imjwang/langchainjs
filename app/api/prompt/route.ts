@@ -9,8 +9,12 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { createSupabaseClient } from '@/lib/serverUtils';
 import { RunnableSequence, RunnableBranch, RunnableMap, RunnableLambda } from 'langchain/schema/runnable';
 import { NextResponse } from 'next/server';
+import { Client } from "langsmith";
+import { LangChainTracer } from "langchain/callbacks";
+import { BedrockAnthropicChat } from "@/lib/models"
 
-export const runtime = 'edge'
+
+// export const runtime = 'edge'
 
 export async function POST(req: Request) {
   const supabase = createSupabaseClient()
@@ -21,6 +25,16 @@ export async function POST(req: Request) {
       status: 401
     })
   }
+
+  const client = new Client({
+    apiUrl: "https://api.smith.langchain.com", // Optional: defaults to LANGCHAIN_ENDPOINT or the default url which is current
+    apiKey: process.env.LANGCHAIN_API_KEY // Optional: this defaults to LANGCHAIN_API_KEY
+  });
+  
+  const tracer = new LangChainTracer({
+    projectName: process.env.LANGCHAIN_PROJECT, // Optional: Defaults to LANGCHAIN_PROJECT, if that is not set it defaults to "default". But it might be useful to change depenging on situation
+    client
+  });
 
 
   const moods = ["happy", "sad", "melodramatic", "crazy"]
@@ -117,10 +131,19 @@ You are having a {mood} {mood} {mood} day and just got done with {activity}.
   // const prompt = await finalPromptTemplate.format({mood: "happy", activity: "talking to squidward", currentMessage: "How are you?", thoughtPolicy: "step by step"})
 
 
-  const model = new ChatOpenAI({
-    modelName: "gpt-4-1106-preview",
-    verbose: true,
-  });
+  // const model = new ChatOpenAI({
+  //   modelName: "gpt-4-1106-preview",
+  //   // verbose: true,
+  // });
+
+  const model = new BedrockAnthropicChat({
+    model: "anthropic.claude-v2:1",
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+    }
+  })
 
   const outputParser = new BytesOutputParser();
 
@@ -176,7 +199,7 @@ You are having a {mood} {mood} {mood} day and just got done with {activity}.
     outputParser,
   ])
 
-  const stream = await chain3.stream({currentMessage})
+  const stream = await chain3.stream({currentMessage}, {callbacks: [tracer]})
 
   return new StreamingTextResponse(stream)
 

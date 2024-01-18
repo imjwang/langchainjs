@@ -53,6 +53,7 @@ const activityLoader = () => {
 'You are having a happy day and just got done with talking to squidward.'
 
 Let's think step by step.
+
   
 How are you?
   */

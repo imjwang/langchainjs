@@ -15,10 +15,11 @@ import { CohereEmbeddings } from "@langchain/cohere";
 import { formatDocumentsAsString } from "langchain/util/document";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { ScoreThresholdRetriever } from "langchain/retrievers/score_threshold";
+import { BedrockChat } from "langchain/chat_models/bedrock";
 import { Document } from 'langchain/document';
 
 
-export const runtime = 'edge'
+// export const runtime = 'edge' // can't get bedrock working for edge
 
 export async function POST(req: Request) {
   const supabase = createSupabaseClient()
@@ -43,10 +44,18 @@ export async function POST(req: Request) {
   const stringParser = new StringOutputParser()
   const bytesParser = new BytesOutputParser()
 
-  const model = new ChatOpenAI({
-    modelName: "gpt-4-1106-preview",
-    verbose: true,
-  });
+  // const model = new ChatOpenAI({
+  //   modelName: "gpt-4-1106-preview",
+  //   verbose: true,
+  // });
+  const model = new BedrockChat({
+    model: "anthropic.claude-v2:1",
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+    }
+  })
 
   const reasoningCharacterPromptTemplate = await pull("jaif/reasoning") as PromptTemplate
   const funnyPromptTemplate = await pull("jaif/funny") as PromptTemplate
@@ -61,7 +70,7 @@ export async function POST(req: Request) {
   
   const vectorStore = await MemoryVectorStore.fromDocuments(docs, new CohereEmbeddings({model: "embed-english-light-v3.0", inputType: "search_document"}));
   // const vectorStore = await MemoryVectorStore.fromDocuments(docs, new OpenAIEmbeddings());
-  
+  vectorStore.embeddings = new CohereEmbeddings({model: "embed-english-light-v3.0", inputType: "search_query"})
   const retriever = vectorStore.asRetriever(5)
   // const retriever = ScoreThresholdRetriever.fromVectorStore(vectorStore, {
   //   minSimilarityScore: 0.7,
@@ -175,7 +184,7 @@ Jokes:
 Your job is to classify the user message's intent to select the best prompt.
 
 User Message:
-{message}
+{currentMessage}
 
 Option A - {descA}:
 {promptA}
@@ -232,10 +241,6 @@ Only output one char A, B, or C. Always return one of the three options even if 
         const { messages } = await req.json()
         return  messages[messages.length - 1].content;
       },
-    },
-    {
-      currentMessage: ({currentMessage}) => currentMessage,
-      message: ({currentMessage}) => currentMessage,
     },
     {
       classification: classificationChain,
