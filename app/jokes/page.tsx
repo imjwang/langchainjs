@@ -45,7 +45,7 @@ async function DatasetVisualizer() {
     return (
       <>
         {
-          datasets.map((dataset) => <Dataset dataset={dataset} key={dataset.id} />)
+          datasets.map((dataset) => <div>{dataset.name}</div>)
         }
       </>
   )
