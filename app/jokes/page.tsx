@@ -40,14 +40,12 @@ async function getDatasets() {
 }
 
 async function DatasetVisualizer() {
-  const datasets = await getDatasets()
+  // const datasets = await getDatasets()
 
     return (
-      <>
-        {
-          datasets.map((dataset) => <div key={dataset.id}>{dataset.name}</div>)
-        }
-      </>
+      <div>
+        testing1234
+      </div>
   )
 }
 
