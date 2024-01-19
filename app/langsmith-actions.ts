@@ -4,6 +4,7 @@ import { Client } from "langsmith";
 import { type Dataset } from "langsmith";
 import { nanoid } from "ai";
 import { revalidatePath } from "next/cache";
+import { create } from "domain";
 
 const client = new Client()
 
@@ -68,4 +69,40 @@ export async function getJokeDatasetStatus() {
   }
 
   return undefined
+}
+
+
+export async function getExamples(datasetId: string | undefined) {
+  if (!datasetId) {
+    return []
+  }
+
+  revalidatePath('/')
+
+  const examplesGenerator = client.listExamples({ datasetId })
+
+  const examples = []
+  for await (const { outputs } of examplesGenerator) {
+    examples.push(outputs?.joke)
+  }
+
+  return examples
+}
+
+
+export async function createExamplesFromArray(jokes: string[], datasetId: string | undefined) {
+  if (!datasetId) {
+    return "No dataset found"
+  }
+
+  for (const joke of jokes) {
+    await client.createExample(
+      { question: "Tell me a joke." },
+      { joke },
+      { datasetId }
+    )
+  }
+
+  revalidatePath('/')
+  return "ok"
 }

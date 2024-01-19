@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { createJokeDataset, deleteJokeDataset, getJokeDatasetStatus, createExample } from "@/app/langsmith-actions";
 import { type Dataset } from "langsmith";
 import { useFormState } from 'react-dom'
+import { createJokes } from "@/lib/chains";
 
 
 const initialState = {
@@ -34,6 +35,11 @@ export function JokeDatasetManager() {
     checkDataset()
   }
 
+  const handleCreateJokes = async () => {
+    const jokes = await createJokes(jokeDataset?.id)
+    console.log(jokes)
+  }
+
   useEffect(() => {
     checkDataset()
   }, [])
@@ -54,6 +60,9 @@ export function JokeDatasetManager() {
         <Button className="w-36" type="submit">Create Example</Button>
         <p className="text-sm"><b>Last Result:</b> {state.message}</p>
       </form>
+      <Button className="mt-4 bg-yellow-400 text-black" onClick={handleCreateJokes} >
+        Create Jokes
+      </Button>
     </div>
   )
 }

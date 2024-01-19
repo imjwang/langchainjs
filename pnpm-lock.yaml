@@ -94,6 +94,9 @@ dependencies:
   d3-dsv:
     specifier: ^2.0.0
     version: 2.0.0
+  fast-xml-parser:
+    specifier: ^4.3.3
+    version: 4.3.3
   focus-trap-react:
     specifier: ^10.2.3
     version: 10.2.3(react-dom@18.2.0)(react@18.2.0)
@@ -102,7 +105,7 @@ dependencies:
     version: 1.2.1(next@14.0.4-canary.17)
   langchain:
     specifier: ^0.0.212
-    version: 0.0.212(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.495.0)(@aws-sdk/credential-provider-node@3.495.0)(@smithy/eventstream-codec@2.1.0)(@smithy/protocol-http@3.1.0)(@smithy/signature-v4@2.1.0)(@smithy/util-utf8@2.1.0)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.3)(d3-dsv@2.0.0)(pdf-parse@1.1.1)
+    version: 0.0.212(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.495.0)(@aws-sdk/credential-provider-node@3.495.0)(@smithy/eventstream-codec@2.1.0)(@smithy/protocol-http@3.1.0)(@smithy/signature-v4@2.1.0)(@smithy/util-utf8@2.1.0)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.3)(d3-dsv@2.0.0)(fast-xml-parser@4.3.3)(pdf-parse@1.1.1)
   langsmith:
     specifier: ^0.0.59
     version: 0.0.59
@@ -3823,6 +3826,13 @@ packages:
       strnum: 1.0.5
     dev: false
 
+  /fast-xml-parser@4.3.3:
+    resolution: {integrity: sha512-coV/D1MhrShMvU6D0I+VAK3umz6hUaxxhL0yp/9RjfiYUfAv14rDhGQL+PLForhMdr0wq3PiV07WtkkNjJjNHg==}
+    hasBin: true
+    dependencies:
+      strnum: 1.0.5
+    dev: false
+
   /fastq@1.16.0:
     resolution: {integrity: sha512-ifCoaXsDrsdkWTtiNJX5uzHDsrck5TzfKKDcuFFTIrrc/BS076qgEIfoIy1VeZqViznfKiysPYTh/QeHtnIsYA==}
     dependencies:
@@ -4535,7 +4545,7 @@ packages:
     engines: {node: '>=6'}
     dev: false
 
-  /langchain@0.0.212(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.495.0)(@aws-sdk/credential-provider-node@3.495.0)(@smithy/eventstream-codec@2.1.0)(@smithy/protocol-http@3.1.0)(@smithy/signature-v4@2.1.0)(@smithy/util-utf8@2.1.0)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.3)(d3-dsv@2.0.0)(pdf-parse@1.1.1):
+  /langchain@0.0.212(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.495.0)(@aws-sdk/credential-provider-node@3.495.0)(@smithy/eventstream-codec@2.1.0)(@smithy/protocol-http@3.1.0)(@smithy/signature-v4@2.1.0)(@smithy/util-utf8@2.1.0)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.3)(d3-dsv@2.0.0)(fast-xml-parser@4.3.3)(pdf-parse@1.1.1):
     resolution: {integrity: sha512-zPcnAX3t1RuyWkbEkyqlIdR29j51Eylz7rcDcqET1baquR/r9xuk7P/HAJ6TFowiXDUg10d5YBD6VBvjwF/WDA==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -4703,6 +4713,7 @@ packages:
       binary-extensions: 2.2.0
       d3-dsv: 2.0.0
       expr-eval: 2.0.2
+      fast-xml-parser: 4.3.3
       js-tiktoken: 1.0.8
       js-yaml: 4.1.0
       jsonpointer: 5.0.1
