@@ -54,8 +54,8 @@ export default function JokesPage() {
 
   return (
     <>
-      <DatasetVisualizer />
-      {/* <JokeDatasetManager /> */}
+      {/* <DatasetVisualizer /> */}
+      <JokeDatasetManager />
     </>
   )
 }
