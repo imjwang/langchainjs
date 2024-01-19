@@ -27,7 +27,7 @@ async function Dataset({ dataset=null }: DatasetProps) {
   )
 }
 
-async function DatasetVisualizer() {
+async function getDatasets() {
   const client = new Client()
   const datasetsGenerator = client.listDatasets({datasetNameContains: "jokes"})
   const datasets = []
@@ -36,17 +36,18 @@ async function DatasetVisualizer() {
     datasets.push(dataset)
   }
 
-  return (
-    <>
-    {
-      datasets.map((dataset) => {
-        return (
-          <Dataset dataset={dataset} key={dataset.id} />
-        )
-      }
-      )
-    }
-    </>
+  return datasets
+}
+
+async function DatasetVisualizer() {
+  const datasets = await getDatasets()
+
+    return (
+      <>
+        {
+          datasets.map((dataset) => <Dataset dataset={dataset} key={dataset.id} />)
+        }
+      </>
   )
 }
 
@@ -54,7 +55,7 @@ export default function JokesPage() {
 
   return (
     <>
-      {/* <DatasetVisualizer /> */}
+      <DatasetVisualizer />
       <JokeDatasetManager />
     </>
   )
