@@ -4,14 +4,13 @@ import { Client } from "langsmith";
 import { type Dataset } from "langsmith";
 import { nanoid } from "ai";
 import { revalidatePath } from "next/cache";
-import { create } from "domain";
 
 const client = new Client()
 
-export async function createJokeDataset() {
-  const datasetName = `jokes-${nanoid(10)}`
-  const dataset = await client.createDataset(datasetName, {
-    description: "Jokes dataset from langchainjs bootcamp."
+export async function createDataset(datasetName: string) {
+  const name = `${datasetName}-${nanoid(10)}`
+  const dataset = await client.createDataset(name, {
+    description: `${datasetName} dataset from langchainjs bootcamp.`
   })
 
   revalidatePath('/')
@@ -26,7 +25,7 @@ export async function createExample(datasetName: string | undefined, prevState: 
   }
 
   const question = "Tell me a joke."
-  const joke = formData.get('joke')
+  const joke = formData.get('joke') as string
 
   try {
     await client.createExample(
@@ -40,16 +39,22 @@ export async function createExample(datasetName: string | undefined, prevState: 
     }
   }
 
+  if (joke === null) {
+    return {
+      message: "No joke found"
+    }
+  }
+
   revalidatePath('/')
   return {
-    message: "Success"
+    message: `Success: ${joke.substring(0, 10)}... created.`
   }
 }
 
-export async function deleteJokeDataset() {
+export async function deleteDataset(datasetName: string) {
   revalidatePath('/')
 
-  const datasetsGenerator = client.listDatasets({ datasetNameContains: "jokes" })
+  const datasetsGenerator = client.listDatasets({ datasetNameContains: datasetName })
 
   for await (const dataset of datasetsGenerator) {
     await client.deleteDataset({datasetName: dataset.name})
@@ -59,16 +64,16 @@ export async function deleteJokeDataset() {
   return "ok"
 }
 
-export async function getJokeDatasetStatus() {
+export async function getDatasetStatus(datasetName: string) {
   revalidatePath('/')
 
-  const datasetsGenerator = client.listDatasets({ datasetNameContains: "jokes" })
+  const datasetsGenerator = client.listDatasets({ datasetNameContains: datasetName })
   
   for await (const dataset of datasetsGenerator) {
     return dataset
   }
 
-  return undefined
+  return null
 }
 
 
@@ -92,7 +97,9 @@ export async function getExamples(datasetId: string | undefined) {
 
 export async function createExamplesFromArray(jokes: string[], datasetId: string | undefined) {
   if (!datasetId) {
-    return "No dataset found"
+    return {
+      message: "No dataset found"
+    }
   }
 
   for (const joke of jokes) {
@@ -104,5 +111,16 @@ export async function createExamplesFromArray(jokes: string[], datasetId: string
   }
 
   revalidatePath('/')
-  return "ok"
+  return {
+    message: `${jokes.length} jokes created.`
+  }
+}
+
+
+export async function handleFeedback(runId: string, joke: string, datasetId: string | undefined) {
+  await client.createFeedback(runId, "lol", { comment: joke })
+  if (datasetId) {
+    await createExamplesFromArray([joke], datasetId)
+    revalidatePath('/')
+  }
 }

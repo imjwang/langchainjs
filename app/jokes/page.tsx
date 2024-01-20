@@ -6,7 +6,10 @@ export default function JokesPage() {
 
   return (
     <>
-      <DatasetVisualizer />
+    <div className="flex flex-col gap-2 p-4">
+      <DatasetVisualizer datasetName="jokes" />
+      <DatasetVisualizer datasetName="flops" />
+    </div>
       <JokeDatasetManager />
     </>
   )

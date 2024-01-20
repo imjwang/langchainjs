@@ -1,12 +1,13 @@
-import { getJokeDatasetStatus } from "@/app/langsmith-actions";
+import { getDatasetStatus } from "@/app/langsmith-actions";
 import { Client, type Dataset } from "langsmith";
+import { DatasetControls } from "./dataset-controls";
 
 
 type DatasetProps = {
   dataset: Dataset | null
 }
 
-async function Dataset({ dataset=null }: DatasetProps) {
+function Dataset({ dataset=null }: DatasetProps) {
   if (!dataset) {
     return null
   }
@@ -27,15 +28,17 @@ async function Dataset({ dataset=null }: DatasetProps) {
   )
 }
 
+type DatasetVisualizerProps = {
+  datasetName: string
+}
 
-export async function DatasetVisualizer() {
-  const dataset = await getJokeDatasetStatus()
-
-  if (dataset == null) {
-    return null
-  }
+export async function DatasetVisualizer({datasetName} : DatasetVisualizerProps) {
+  const dataset = await getDatasetStatus(datasetName)
 
   return (
-    <Dataset dataset={dataset} key={dataset.id} />
+    <>
+      <Dataset dataset={dataset} key={dataset?.id} />
+      <DatasetControls initialDataset={dataset} datasetName={datasetName} />
+    </>
   )
 }
