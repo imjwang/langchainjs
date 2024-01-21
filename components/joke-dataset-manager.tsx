@@ -26,7 +26,7 @@ function JokeRater({ jokesDatasetId, flopsDatasetId, checkDataset }: JokeRaterPr
     checkDataset()
     setLoading(true)
     const { message, jokes, id } = await createJokes(jokesDatasetId)
-    if (message) { toast(message); return }
+    if (message !== "ok") { toast(message); return }
     setRunId(id!)
     setJokes(jokes)
     setLoading(false)

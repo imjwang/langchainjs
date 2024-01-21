@@ -187,7 +187,8 @@ Please output your jokes in <joke></joke> XML tags.
 
     return {
       jokes: newParsedJokes,
-      id: runCollector.tracedRuns[0].id
+      id: runCollector.tracedRuns[0].id,
+      message: "ok"
     }
 
   } catch (e) {
