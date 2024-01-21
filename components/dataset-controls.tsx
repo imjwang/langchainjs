@@ -37,9 +37,9 @@ export function DatasetControls({datasetName, initialDataset}: DatasetControlsPr
     <>
     {
       dataset ?
-      <Button variant="destructive" onClick={handleDelete}>Delete "{datasetName}" Dataset</Button>
+      <Button variant="destructive" onClick={handleDelete}>Delete &quot;{datasetName}&quot; Dataset</Button>
       :
-      <Button onClick={handleCreate}>Create "{datasetName}" Dataset</Button>
+      <Button onClick={handleCreate}>Create &quot;{datasetName}&quot; Dataset</Button>
     }
     </>
   )
