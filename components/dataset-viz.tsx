@@ -21,7 +21,7 @@ function Dataset({ dataset=null }: DatasetProps) {
       <div className="bg-slate-200 dark:bg-slate-600 py-6 rounded-b-md drop-shadow-md border border-black">
       <ul className="ml-8 list-disc">
         <li><b>Description:</b> {dataset.description}</li>
-        <li><b>Size:</b> {dataset.example_count} / 20</li>
+        <li><b>Size:</b> {dataset.example_count}</li>
       </ul>
       </div>
   </div>

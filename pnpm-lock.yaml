@@ -104,11 +104,11 @@ dependencies:
     specifier: ^1.2.1
     version: 1.2.1(next@14.0.4-canary.17)
   langchain:
-    specifier: ^0.0.212
-    version: 0.0.212(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.495.0)(@aws-sdk/credential-provider-node@3.495.0)(@smithy/eventstream-codec@2.1.0)(@smithy/protocol-http@3.1.0)(@smithy/signature-v4@2.1.0)(@smithy/util-utf8@2.1.0)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.3)(d3-dsv@2.0.0)(fast-xml-parser@4.3.3)(pdf-parse@1.1.1)
+    specifier: ^0.1.4
+    version: 0.1.4(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.495.0)(@aws-sdk/credential-provider-node@3.495.0)(@smithy/eventstream-codec@2.1.0)(@smithy/protocol-http@3.1.0)(@smithy/signature-v4@2.1.0)(@smithy/util-utf8@2.1.0)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.3)(d3-dsv@2.0.0)(fast-xml-parser@4.3.3)(pdf-parse@1.1.1)
   langsmith:
-    specifier: ^0.0.59
-    version: 0.0.59
+    specifier: ^0.0.62
+    version: 0.0.62
   nanoid:
     specifier: ^5.0.4
     version: 5.0.4
@@ -850,8 +850,8 @@ packages:
       - encoding
     dev: false
 
-  /@langchain/community@0.0.18(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.495.0)(@aws-sdk/credential-provider-node@3.495.0)(@smithy/eventstream-codec@2.1.0)(@smithy/protocol-http@3.1.0)(@smithy/signature-v4@2.1.0)(@smithy/util-utf8@2.1.0)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.3):
-    resolution: {integrity: sha512-U8Wvi0chHQnlYRCVm9la+Y71o1oc/4r2H+p8NzIl900WfElY7npQ6PCXiyv0ONytJhB9bgPFacmC19nrKFPERA==}
+  /@langchain/community@0.0.19(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.495.0)(@aws-sdk/credential-provider-node@3.495.0)(@smithy/eventstream-codec@2.1.0)(@smithy/protocol-http@3.1.0)(@smithy/signature-v4@2.1.0)(@smithy/util-utf8@2.1.0)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.3):
+    resolution: {integrity: sha512-4+vpEINOvCZVqjcVVmctvA7ewMSopRbqJ/leDx7hvkeW1iC/aZJDqzWZPxiYNM0VxmB8qeTPFSMB0l4AKwO74w==}
     engines: {node: '>=18'}
     peerDependencies:
       '@aws-crypto/sha256-js': ^5.0.0
@@ -1105,7 +1105,7 @@ packages:
       '@supabase/supabase-js': 2.39.3
       cohere-ai: 7.7.3
       flat: 5.0.2
-      langsmith: 0.0.59
+      langsmith: 0.0.62
       uuid: 9.0.1
       zod: 3.22.4
     transitivePeerDependencies:
@@ -1120,7 +1120,7 @@ packages:
       camelcase: 6.3.0
       decamelize: 1.2.0
       js-tiktoken: 1.0.8
-      langsmith: 0.0.59
+      langsmith: 0.0.62
       ml-distance: 4.0.1
       p-queue: 6.6.2
       p-retry: 4.6.2
@@ -4545,8 +4545,8 @@ packages:
     engines: {node: '>=6'}
     dev: false
 
-  /langchain@0.0.212(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.495.0)(@aws-sdk/credential-provider-node@3.495.0)(@smithy/eventstream-codec@2.1.0)(@smithy/protocol-http@3.1.0)(@smithy/signature-v4@2.1.0)(@smithy/util-utf8@2.1.0)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.3)(d3-dsv@2.0.0)(fast-xml-parser@4.3.3)(pdf-parse@1.1.1):
-    resolution: {integrity: sha512-zPcnAX3t1RuyWkbEkyqlIdR29j51Eylz7rcDcqET1baquR/r9xuk7P/HAJ6TFowiXDUg10d5YBD6VBvjwF/WDA==}
+  /langchain@0.1.4(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.495.0)(@aws-sdk/credential-provider-node@3.495.0)(@smithy/eventstream-codec@2.1.0)(@smithy/protocol-http@3.1.0)(@smithy/signature-v4@2.1.0)(@smithy/util-utf8@2.1.0)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.3)(d3-dsv@2.0.0)(fast-xml-parser@4.3.3)(pdf-parse@1.1.1):
+    resolution: {integrity: sha512-wgYt63JqwCDNrGBXHLD5javroVqCiP/+aYJEHPN+xgchEpcX881HcmhZGmZl8w4tsI0Q4Jy+3mcnV9EJlUD/2w==}
     engines: {node: '>=18'}
     peerDependencies:
       '@aws-sdk/client-s3': ^3.310.0
@@ -4576,6 +4576,7 @@ packages:
       fast-xml-parser: ^4.2.7
       google-auth-library: ^8.9.0
       googleapis: ^126.0.1
+      handlebars: ^4.7.8
       html-to-text: ^9.0.5
       ignore: ^5.2.0
       ioredis: ^5.3.2
@@ -4592,7 +4593,7 @@ packages:
       pyodide: ^0.24.1
       redis: ^4.6.4
       sonix-speech-recognition: ^2.1.1
-      srt-parser-2: ^1.2.2
+      srt-parser-2: ^1.2.3
       typeorm: ^0.3.12
       vectordb: ^0.1.4
       weaviate-ts-client: ^1.4.0
@@ -4655,6 +4656,8 @@ packages:
         optional: true
       googleapis:
         optional: true
+      handlebars:
+        optional: true
       html-to-text:
         optional: true
       ignore:
@@ -4706,7 +4709,7 @@ packages:
     dependencies:
       '@anthropic-ai/sdk': 0.9.1
       '@aws-sdk/credential-provider-node': 3.495.0
-      '@langchain/community': 0.0.18(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.495.0)(@aws-sdk/credential-provider-node@3.495.0)(@smithy/eventstream-codec@2.1.0)(@smithy/protocol-http@3.1.0)(@smithy/signature-v4@2.1.0)(@smithy/util-utf8@2.1.0)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.3)
+      '@langchain/community': 0.0.19(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.495.0)(@aws-sdk/credential-provider-node@3.495.0)(@smithy/eventstream-codec@2.1.0)(@smithy/protocol-http@3.1.0)(@smithy/signature-v4@2.1.0)(@smithy/util-utf8@2.1.0)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.3)
       '@langchain/core': 0.1.16
       '@langchain/openai': 0.0.12
       '@supabase/supabase-js': 2.39.3
@@ -4718,7 +4721,7 @@ packages:
       js-yaml: 4.1.0
       jsonpointer: 5.0.1
       langchainhub: 0.0.6
-      langsmith: 0.0.59
+      langsmith: 0.0.62
       ml-distance: 4.0.1
       openapi-types: 12.1.3
       p-retry: 4.6.2
@@ -4726,7 +4729,7 @@ packages:
       uuid: 9.0.1
       yaml: 2.3.4
       zod: 3.22.4
-      zod-to-json-schema: 3.20.3(zod@3.22.4)
+      zod-to-json-schema: 3.22.3(zod@3.22.4)
     transitivePeerDependencies:
       - '@aws-crypto/sha256-js'
       - '@aws-sdk/client-bedrock-runtime'
@@ -4788,8 +4791,8 @@ packages:
     resolution: {integrity: sha512-SW6105T+YP1cTe0yMf//7kyshCgvCTyFBMTgH2H3s9rTAR4e+78DA/BBrUL/Mt4Q5eMWui7iGuAYb3pgGsdQ9w==}
     dev: false
 
-  /langsmith@0.0.59:
-    resolution: {integrity: sha512-ZnlSMxDaBGcKuyenooISzxuAzwCAjgEwefF0gx4d8nJ5XwaF+IZlLMxDlnt1rnomeofF7kNRoLYhpcIceUsuDw==}
+  /langsmith@0.0.62:
+    resolution: {integrity: sha512-OjjlNbxbfEUSgbBLA7JS7Lwg0M+oMZp4ZSwujR9TZBcSKvpv1f3lE2X9e9vTWe9huoUMlUAvwoaSWdDG6w6QLQ==}
     hasBin: true
     dependencies:
       '@types/uuid': 9.0.7

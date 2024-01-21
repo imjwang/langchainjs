@@ -12,6 +12,7 @@ import { NextResponse } from 'next/server';
 import { Client } from "langsmith";
 import { LangChainTracer } from "langchain/callbacks";
 import { BedrockAnthropicChat } from "@/lib/models"
+import { FewShotPromptTemplate } from 'langchain/prompts';
 
 
 // export const runtime = 'edge'
@@ -199,6 +200,25 @@ You are having a {mood} {mood} {mood} day and just got done with {activity}.
     model,
     outputParser,
   ])
+
+  const fewShotTemplate = `<example>
+H: tell me a joke.
+A: {joke}
+</example>`
+
+  const examples = [
+    {joke: "Why did the chicken cross the road? To get to the other side!"},
+    {joke: "Why did the chicken cross the playground? To get to the other slide!"},
+    {joke: "Knock knock. Who's there? Lettuce. Lettuce who? Lettuce in, it's cold out here!"},
+  ]
+
+  const fewShotPromptTemplate = PromptTemplate.fromTemplate(fewShotTemplate)
+
+  const fewShotPrompt = new FewShotPromptTemplate({
+    examplePrompt: fewShotPromptTemplate,
+    examples,
+    inputVariables: []
+  })
 
   const stream = await chain3.stream({currentMessage})
 

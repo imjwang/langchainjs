@@ -3,10 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
-import { createExample, getExamples, handleFeedback, getDatasetStatus } from "@/app/langsmith-actions";
+import { createExample, getExamples, handleFeedback, getDatasetStatus, jokesDatasetToJSONL } from "@/app/langsmith-actions";
 import { type Dataset } from "langsmith";
 import { useFormState } from 'react-dom'
 import { createJokes } from "@/lib/chains";
+import toast from "react-hot-toast";
 
 
 type JokeRaterProps = {
@@ -25,7 +26,7 @@ function JokeRater({ jokesDatasetId, flopsDatasetId, checkDataset }: JokeRaterPr
     checkDataset()
     setLoading(true)
     const { message, jokes, id } = await createJokes(jokesDatasetId)
-    if (message) { alert(message); return }
+    if (message) { toast(message); return }
     setRunId(id!)
     setJokes(jokes)
     setLoading(false)
@@ -57,12 +58,14 @@ function JokeRater({ jokesDatasetId, flopsDatasetId, checkDataset }: JokeRaterPr
 
   const handleVote = async () => {
     increment()
-    await handleFeedback(runId, jokes[currentIdx], jokesDatasetId)
+    const res = await handleFeedback(runId, jokes[jokes.length-1], jokesDatasetId, "lol")
+    if (res.message === "error") toast("Upload to dataset failed.")
   }
 
   const handleTrash = async () => {
     increment()
-    await handleFeedback(runId, jokes[currentIdx], flopsDatasetId)
+    const res = await handleFeedback(runId, jokes[jokes.length-1], flopsDatasetId, "chirps")
+    if (res.message === "error") toast("Upload to dataset failed.")
   }
 
   const handleSkip = () => {
@@ -116,6 +119,26 @@ export function JokeDatasetManager() {
     setFlopsDataset(flopsDatasetStatus)
   }
 
+  const handleClickMe = async () => {
+    const jsonlString = await jokesDatasetToJSONL(jokesDataset?.id)
+    if (!jsonlString) {
+      toast("failed")
+      return
+    }
+
+    const jsonlBlob = new Blob([jsonlString], {
+      type: "application/jsonl"
+    })
+
+    const url = URL.createObjectURL(jsonlBlob)
+
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "jokes-finetune.jsonl"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   useEffect(() => {
     checkDataset()
   }, [])
@@ -131,6 +154,7 @@ export function JokeDatasetManager() {
         <Button className="w-36" type="submit">Create Example</Button>
         <p className="text-sm"><b>Last Result:</b> {state.message}</p>
       </form>
+      <Button className="ml-2" onClick={handleClickMe}>Download finetune dataset</Button>
       <JokeRater jokesDatasetId={jokesDataset?.id} flopsDatasetId={flopsDataset?.id} checkDataset={checkDataset} />
       </div>
     </div>

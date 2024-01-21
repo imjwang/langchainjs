@@ -4,6 +4,8 @@ import { Client } from "langsmith";
 import { type Dataset } from "langsmith";
 import { nanoid } from "ai";
 import { revalidatePath } from "next/cache";
+import { StringEvaluator } from "langsmith/evaluation"
+
 
 const client = new Client()
 
@@ -77,7 +79,7 @@ export async function getDatasetStatus(datasetName: string) {
 }
 
 
-export async function getExamples(datasetId: string | undefined) {
+export async function getExamples(datasetId: string | undefined): Promise<string[]> {
   if (!datasetId) {
     return []
   }
@@ -117,10 +119,39 @@ export async function createExamplesFromArray(jokes: string[], datasetId: string
 }
 
 
-export async function handleFeedback(runId: string, joke: string, datasetId: string | undefined) {
-  await client.createFeedback(runId, "lol", { comment: joke })
-  if (datasetId) {
-    await createExamplesFromArray([joke], datasetId)
-    revalidatePath('/')
+export async function handleFeedback(runId: string, joke: string, datasetId: string | undefined, key: string) {
+  try {
+    await client.createFeedback(runId, key, { comment: joke })
+    if (datasetId) {
+      await createExamplesFromArray([joke], datasetId)
+    }
+  } catch (e) {
+    return {
+      message: "error"
+    }
   }
+
+  revalidatePath('/')
+  return {
+    message: "success"
+  }
+}
+
+
+export async function jokesDatasetToJSONL(datasetId: string | undefined) {
+  if (!datasetId) return null
+  revalidatePath('/')
+
+  const formattedEntries = []
+  const dataset = client.listExamples({ datasetId })
+
+  for await (const entry of dataset) {
+    // format for aws bedrock finetuning https://docs.aws.amazon.com/bedrock/latest/userguide/model-customization-prepare.html#model-customization-prepare-finetuning
+    const {inputs: { question: prompt }, outputs: { joke: completion } } = entry
+    formattedEntries.push({prompt, completion})
+  }
+
+  const jsonl = formattedEntries.map(JSON.stringify).join('\n');
+
+  return jsonl
 }

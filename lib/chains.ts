@@ -137,12 +137,6 @@ export async function createJokes(datasetId: string | undefined) {
 
   const examples = await getExamples(datasetId)
 
-  if (examples.length >= 20) {
-    return {
-      message: "Dataset limit reached."
-    }
-  }
-
   const template = `\
 Produce 5 exemplary jokes about {topic}. Here is an example joke:
 <example>"Why can't a bicycle stand up by itself? Because it's two-tired!"</example>
