@@ -147,10 +147,10 @@ export async function jokesDatasetToJSONL(datasetId: string | undefined) {
 
   for await (const entry of dataset) {
     // format for aws bedrock finetuning https://docs.aws.amazon.com/bedrock/latest/userguide/model-customization-prepare.html#model-customization-prepare-finetuning
-    const {inputs: { question: prompt }, outputs: { joke: completion } } = entry
-    formattedEntries.push({prompt, completion})
+    const {inputs: { question: prompt }, outputs } = entry
+    formattedEntries.push({prompt, completion: outputs?.joke })
   }
-
+  // @ts-ignore
   const jsonl = formattedEntries.map(JSON.stringify).join('\n');
 
   return jsonl
