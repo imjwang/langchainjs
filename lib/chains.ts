@@ -131,7 +131,9 @@ export async function getSaveObject(messages: Message[]) {
 export async function createJokes(datasetId: string | undefined) {
   if (!datasetId) {
     return {
-      message: "No dataset found"
+      message: "No dataset found",
+      jokes: [],
+      id: ""
     }
   }
 
@@ -193,23 +195,9 @@ Please output your jokes in <joke></joke> XML tags.
 
   } catch (e) {
     return {
-      message: "No jokes created."
+      message: "No jokes created.",
+      jokes: [], 
+      id: ""
     }
   }
-
-  const parsedResults = results.reduce((acc, cur) => {
-    if (!cur.joke) {
-      return acc
-    }
-    return [...acc, ...cur.joke]
-  }, []) as string []
-  
-  const uniqueParsedJokes = Array.from(new Set(parsedResults))
-  
-  const newParsedJokes = uniqueParsedJokes.filter((joke: string) => !examples.includes(joke) && joke != undefined && joke !== typeof "string")
-  
-  const res = await createExamplesFromArray(newParsedJokes, datasetId)
-  
-  revalidatePath('/')
-  return res
 }
