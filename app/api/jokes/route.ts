@@ -16,6 +16,7 @@ import { FewShotPromptTemplate } from 'langchain/prompts';
 import { Client } from 'langsmith';
 import { getExamples, getDatasetStatus } from '@/app/langsmith-actions';
 
+const client = new Client()
 // export const runtime = 'edge'
 
 export async function POST(req: Request) {
@@ -86,10 +87,12 @@ A: <flop>{flop}</flop>
       },
       {
         name: "jokes",
+        // @ts-ignore
         prompt: fewShotPromptJokes
       },
       {
         name: "flops",
+        // @ts-ignore
         prompt: fewShotPromptFlops
       },
       {
