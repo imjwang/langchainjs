@@ -37,6 +37,17 @@ export function EmptyScreen({ setInput }: Pick<UseChatHelpers, 'setInput'>) {
         <p className="leading-normal text-muted-foreground text-sm italic">
           You must be logged in to create indexes and query them, however, there is currently a demo dataset.
         </p>
+        <p className="leading-normal text-muted-foreground">
+          Link to Joke rater for module 2:
+        </p>
+        <Link href="/jokes">
+          <Button className="bg-rose-400">
+             Joke Rater
+          </Button>
+        </Link>
+        <p className="leading-normal text-muted-foreground text-sm italic">
+          You need a langsmith account for this to work, it is currently set to mine.
+        </p>
         <p className="leading-normal text-muted-foreground pt-4">
           You can start a conversation here or try the following examples:
         </p>
