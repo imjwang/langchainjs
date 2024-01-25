@@ -19,11 +19,11 @@ export interface ChatPanelProps
     | 'input'
     | 'setInput'
   > {
-  id?: string,
-  chain: string,
-  setChain: (chain: string) => void,
-  index: string,
-  setIndex: (index: string) => void,
+  id?: string
+  chain: string
+  setChain: (chain: string) => void
+  index: string
+  setIndex: (index: string) => void
 }
 
 export function ChatPanel({
@@ -68,7 +68,7 @@ export function ChatPanel({
           )}
         </div>
         <div className="space-y-2 border-t bg-background p-4 shadow-lg sm:rounded-t-xl sm:border">
-          <ChainSelect 
+          <ChainSelect
             chain={chain}
             setChain={setChain}
             index={index}

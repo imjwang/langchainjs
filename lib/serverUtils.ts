@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr"
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export function createSupabaseClient() {
@@ -17,11 +17,10 @@ export function createSupabaseClient() {
         },
         remove(name, options) {
           cookieStore.set({ name, value: '', ...options })
-        },
-      },
+        }
+      }
     }
   )
 
   return supabase
-  
 }

@@ -1,38 +1,55 @@
-import { StreamingTextResponse } from 'ai';
- 
-// import { RemoteRunnable } from "langchain/runnables/remote"
-import { BytesOutputParser, StringOutputParser } from 'langchain/schema/output_parser';
-import { pull, push } from "langchain/hub";
-import { AIMessage, HumanMessage, SystemMessage } from "langchain/schema";
-import { ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate, MessagesPlaceholder, PipelinePromptTemplate, PromptTemplate } from "langchain/prompts";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { createSupabaseClient } from '@/lib/serverUtils';
-import { RunnableSequence, RunnableBranch, RunnableMap, RunnableLambda, RunnablePassthrough } from 'langchain/schema/runnable';
-import { NextResponse } from 'next/server';
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { JSONLoader } from "langchain/document_loaders/fs/json";
-import { CohereEmbeddings } from "@langchain/cohere";
-import { formatDocumentsAsString } from "langchain/util/document";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { ScoreThresholdRetriever } from "langchain/retrievers/score_threshold";
-import { BedrockChat } from "langchain/chat_models/bedrock";
-import { Document } from 'langchain/document';
+import { StreamingTextResponse } from 'ai'
 
+// import { RemoteRunnable } from "langchain/runnables/remote"
+import {
+  BytesOutputParser,
+  StringOutputParser
+} from 'langchain/schema/output_parser'
+import { pull, push } from 'langchain/hub'
+import { AIMessage, HumanMessage, SystemMessage } from 'langchain/schema'
+import {
+  ChatPromptTemplate,
+  SystemMessagePromptTemplate,
+  HumanMessagePromptTemplate,
+  AIMessagePromptTemplate,
+  MessagesPlaceholder,
+  PipelinePromptTemplate,
+  PromptTemplate
+} from 'langchain/prompts'
+import { ChatOpenAI } from 'langchain/chat_models/openai'
+import { createSupabaseClient } from '@/lib/serverUtils'
+import {
+  RunnableSequence,
+  RunnableBranch,
+  RunnableMap,
+  RunnableLambda,
+  RunnablePassthrough
+} from 'langchain/schema/runnable'
+import { NextResponse } from 'next/server'
+import { MemoryVectorStore } from 'langchain/vectorstores/memory'
+import { JSONLoader } from 'langchain/document_loaders/fs/json'
+import { CohereEmbeddings } from '@langchain/cohere'
+import { formatDocumentsAsString } from 'langchain/util/document'
+import { OpenAIEmbeddings } from 'langchain/embeddings/openai'
+import { ScoreThresholdRetriever } from 'langchain/retrievers/score_threshold'
+import { BedrockChat } from 'langchain/chat_models/bedrock'
+import { Document } from 'langchain/document'
 
 // export const runtime = 'edge' // can't get bedrock working for edge
 
 export async function POST(req: Request) {
   const supabase = createSupabaseClient()
-  const {data, error} = await supabase.auth.getSession()
-  
+  const { data, error } = await supabase.auth.getSession()
+
   if (!data.session?.user) {
     return new Response('Unauthorized', {
       status: 401
     })
   }
 
-  const { data: documents, error: bucketErr } = await supabase.storage.from('test').download('examples.json')
-
+  const { data: documents, error: bucketErr } = await supabase.storage
+    .from('test')
+    .download('examples.json')
 
   if (bucketErr) {
     console.error(bucketErr)
@@ -40,7 +57,7 @@ export async function POST(req: Request) {
       status: 500
     })
   }
-  
+
   const stringParser = new StringOutputParser()
   const bytesParser = new BytesOutputParser()
 
@@ -49,28 +66,38 @@ export async function POST(req: Request) {
   //   verbose: true,
   // });
   const model = new BedrockChat({
-    model: "anthropic.claude-v2:1",
-    region: "us-east-1",
+    model: 'anthropic.claude-v2:1',
+    region: 'us-east-1',
     credentials: {
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!
     }
   })
 
-  const reasoningCharacterPromptTemplate = await pull("jaif/reasoning") as PromptTemplate
-  const funnyPromptTemplate = await pull("jaif/funny") as PromptTemplate
-  const friendPromptTemplate = await pull("jaif/friend") as PromptTemplate
-
+  const reasoningCharacterPromptTemplate = (await pull(
+    'jaif/reasoning'
+  )) as PromptTemplate
+  const funnyPromptTemplate = (await pull('jaif/funny')) as PromptTemplate
+  const friendPromptTemplate = (await pull('jaif/friend')) as PromptTemplate
 
   //save for later to update supabase
   const json = JSON.parse(await documents.text())
 
-  const loader = new JSONLoader(documents);
-  const docs = await loader.load();
-  
-  const vectorStore = await MemoryVectorStore.fromDocuments(docs, new CohereEmbeddings({model: "embed-english-light-v3.0", inputType: "search_document"}));
+  const loader = new JSONLoader(documents)
+  const docs = await loader.load()
+
+  const vectorStore = await MemoryVectorStore.fromDocuments(
+    docs,
+    new CohereEmbeddings({
+      model: 'embed-english-light-v3.0',
+      inputType: 'search_document'
+    })
+  )
   // const vectorStore = await MemoryVectorStore.fromDocuments(docs, new OpenAIEmbeddings());
-  vectorStore.embeddings = new CohereEmbeddings({model: "embed-english-light-v3.0", inputType: "search_query"})
+  vectorStore.embeddings = new CohereEmbeddings({
+    model: 'embed-english-light-v3.0',
+    inputType: 'search_query'
+  })
   const retriever = vectorStore.asRetriever(5)
   // const retriever = ScoreThresholdRetriever.fromVectorStore(vectorStore, {
   //   minSimilarityScore: 0.7,
@@ -81,19 +108,25 @@ User Message:
 {currentMessage}
 Generate a single joke that the user would enjoy. Only include the joke in your response.`
 
-  const standalonePromptTemplate = PromptTemplate.fromTemplate(standaloneTemplate)
-  const partialStandalonePrompt = await standalonePromptTemplate.partial({character: funnyPromptTemplate.template})
-
+  const standalonePromptTemplate =
+    PromptTemplate.fromTemplate(standaloneTemplate)
+  const partialStandalonePrompt = await standalonePromptTemplate.partial({
+    character: funnyPromptTemplate.template
+  })
 
   const retrieveAndBackup = RunnableSequence.from([
     {
       result: retriever,
       query: new RunnablePassthrough()
     },
-    async ({result, query}) => {
-      await vectorStore.addDocuments([new Document({pageContent: query})])
+    async ({ result, query }) => {
+      await vectorStore.addDocuments([new Document({ pageContent: query })])
       json.text.push(query)
-      const jsonFile = new File([JSON.stringify(json, null, 2)], "examples.json", {type: "application/json"})
+      const jsonFile = new File(
+        [JSON.stringify(json, null, 2)],
+        'examples.json',
+        { type: 'application/json' }
+      )
       await supabase.storage.from('test').update('examples.json', jsonFile, {
         upsert: true
       })
@@ -101,7 +134,11 @@ Generate a single joke that the user would enjoy. Only include the joke in your 
     }
   ])
 
-  const retrievalChain = partialStandalonePrompt.pipe(model).pipe(stringParser).pipe(retrieveAndBackup).pipe(formatDocumentsAsString)
+  const retrievalChain = partialStandalonePrompt
+    .pipe(model)
+    .pipe(stringParser)
+    .pipe(retrieveAndBackup)
+    .pipe(formatDocumentsAsString)
 
   const finalTemplate = `{character}{examples}{currentMessage}{response}`
   const finalPrompt = PromptTemplate.fromTemplate(finalTemplate)
@@ -123,7 +160,8 @@ A: The answer is hen.`
     character: reasoningCharacterPromptTemplate.template,
     examples,
     response: `Response:
-Let's think step by step. ` })
+Let's think step by step. `
+  })
 
   const jokeRetrievalTemplate = `
 The following are some of the user's favorite jokes. Use them to understand the user's humor. But make sure the new joke is different!
@@ -136,8 +174,10 @@ Jokes:
   const composedPartialReasoningPromptTemplate = new PipelinePromptTemplate({
     pipelinePrompts: [
       {
-        name: "currentMessage",
-        prompt: PromptTemplate.fromTemplate(`\nUser Message:\n{currentMessage}\n`)
+        name: 'currentMessage',
+        prompt: PromptTemplate.fromTemplate(
+          `\nUser Message:\n{currentMessage}\n`
+        )
       }
     ],
     finalPrompt: partialReasoningPromptTemplate
@@ -146,15 +186,15 @@ Jokes:
   const composedFunnyPromptTemplate = new PipelinePromptTemplate({
     pipelinePrompts: [
       {
-        name: "character",
-        prompt: funnyPromptTemplate,
+        name: 'character',
+        prompt: funnyPromptTemplate
       },
       {
-        name: "examples",
+        name: 'examples',
         prompt: jokePromptTemplate
       },
       {
-        name: "response",
+        name: 'response',
         prompt: emptyPromptTemplate
       }
     ],
@@ -164,21 +204,20 @@ Jokes:
   const composedFriendPromptTemplate = new PipelinePromptTemplate({
     pipelinePrompts: [
       {
-        name: "character",
-        prompt: friendPromptTemplate,
+        name: 'character',
+        prompt: friendPromptTemplate
       },
       {
-        name: "examples",
+        name: 'examples',
         prompt: emptyPromptTemplate
       },
       {
-        name: "response",
+        name: 'response',
         prompt: emptyPromptTemplate
       }
     ],
     finalPrompt
   })
-
 
   const classificationTemplate = `\
 Your job is to classify the user message's intent to select the best prompt.
@@ -196,42 +235,46 @@ Option C - {descC}:
 Only output one char A, B, or C. Always return one of the three options even if you are unsure.
 `
 
-  const classificationPrompt = PromptTemplate.fromTemplate(classificationTemplate)
+  const classificationPrompt = PromptTemplate.fromTemplate(
+    classificationTemplate
+  )
   const classificationPartialPrompt = await classificationPrompt.partial({
-    descA: "Reasoning",
+    descA: 'Reasoning',
     promptA: reasoningCharacterPromptTemplate.template,
-    descB: "Funny",
+    descB: 'Funny',
     promptB: funnyPromptTemplate.template,
-    descC: "Friend",
-    promptC: friendPromptTemplate.template,
+    descC: 'Friend',
+    promptC: friendPromptTemplate.template
   })
 
-
   const classificationResultParser = (output: string) => {
-    const options = ["A", "B", "C"]
+    const options = ['A', 'B', 'C']
     const classification = output.trim().toUpperCase()
 
-    if (!options.includes(output)) return "C"
+    if (!options.includes(output)) return 'C'
 
     return classification
-  } 
+  }
 
-  const classificationChain = classificationPartialPrompt.pipe(model).pipe(stringParser).pipe(classificationResultParser)
+  const classificationChain = classificationPartialPrompt
+    .pipe(model)
+    .pipe(stringParser)
+    .pipe(classificationResultParser)
 
   const reasoningChain = composedPartialReasoningPromptTemplate
   const funnyChain = RunnableSequence.from([
     {
-      currentMessage: ({currentMessage}) => currentMessage,
-      jokes: retrievalChain,
+      currentMessage: ({ currentMessage }) => currentMessage,
+      jokes: retrievalChain
     },
-    composedFunnyPromptTemplate,
+    composedFunnyPromptTemplate
   ])
   const friendlyChain = composedFriendPromptTemplate
 
   const chainBranch = RunnableBranch.from([
-    [({classification}) => classification === "A", reasoningChain],
-    [({classification}) => classification === "B", funnyChain],
-    [({classification}) => classification === "C", friendlyChain],
+    [({ classification }) => classification === 'A', reasoningChain],
+    [({ classification }) => classification === 'B', funnyChain],
+    [({ classification }) => classification === 'C', friendlyChain],
     friendlyChain
   ])
 
@@ -239,12 +282,12 @@ Only output one char A, B, or C. Always return one of the three options even if 
     {
       currentMessage: async () => {
         const { messages } = await req.json()
-        return  messages[messages.length - 1].content;
-      },
+        return messages[messages.length - 1].content
+      }
     },
     {
       classification: classificationChain,
-      currentMessage: ({currentMessage}) => currentMessage,
+      currentMessage: ({ currentMessage }) => currentMessage
     },
     chainBranch,
     model,
@@ -254,5 +297,4 @@ Only output one char A, B, or C. Always return one of the three options even if 
   const stream = await mainChain.stream({})
 
   return new StreamingTextResponse(stream)
-
 }

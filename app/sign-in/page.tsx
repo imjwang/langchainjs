@@ -6,11 +6,9 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  
 )
 
 export default function SignInPage() {
@@ -18,7 +16,7 @@ export default function SignInPage() {
 
   useEffect(() => {
     const checkSession = async () => {
-      const {data, error} = await supabase.auth.getSession()
+      const { data, error } = await supabase.auth.getSession()
       if (data.session?.user) {
         router.push('/')
       }
@@ -39,7 +37,7 @@ export default function SignInPage() {
         supabaseClient={supabase}
         appearance={{ theme: ThemeSupa }}
         providers={[]}
-        />
+      />
     </div>
   )
 }

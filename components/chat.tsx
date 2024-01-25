@@ -17,7 +17,6 @@ import { getSaveObject } from '@/lib/chains'
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  
 )
 
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -33,8 +32,9 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   const [chain, setChain] = useState('/api/chat')
   const [index, setIndex] = useState('demo')
   // for retrieval
-  const [sourcesForMessages, setSourcesForMessages] = useState<Record<string, any>>({});
-
+  const [sourcesForMessages, setSourcesForMessages] = useState<
+    Record<string, any>
+  >({})
 
   const { messages, append, reload, stop, isLoading, input, setInput } =
     useChat({
@@ -44,32 +44,40 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       body: {
         id,
         chain,
-        index,
+        index
       },
       onResponse(response) {
         if (response.status === 401) {
           toast.error(response.statusText)
         }
-        const sourcesHeader = response.headers.get("x-sources");
-        const sources = sourcesHeader ? JSON.parse(atob(sourcesHeader)) : [];
-        const messageIndexHeader = response.headers.get("x-message-index");
+        const sourcesHeader = response.headers.get('x-sources')
+        const sources = sourcesHeader ? JSON.parse(atob(sourcesHeader)) : []
+        const messageIndexHeader = response.headers.get('x-message-index')
         if (sources.length && messageIndexHeader !== null) {
-          setSourcesForMessages({...sourcesForMessages, [messageIndexHeader]: sources});
+          setSourcesForMessages({
+            ...sourcesForMessages,
+            [messageIndexHeader]: sources
+          })
         }
       },
-      onFinish : () => setSaveChat(true)
+      onFinish: () => setSaveChat(true)
     })
 
   useEffect(() => {
     const t = async () => {
       setSaveChat(false)
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user }
+      } = await supabase.auth.getUser()
       const output = await getSaveObject(messages)
-      const { data, error } = await supabase.from("history").upsert({ id, messages, user_id: user?.id, ...output }).select()
+      const { data, error } = await supabase
+        .from('history')
+        .upsert({ id, messages, user_id: user?.id, ...output })
+        .select()
       if (!data) return
-  
-      const {id: messageId} = data[0] as Chat
-  
+
+      const { id: messageId } = data[0] as Chat
+
       if (!path.includes('chat')) {
         router.push(`/chat/${messageId}`, { shallow: true })
         router.refresh()
@@ -83,7 +91,10 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
         {messages.length ? (
           <>
-            <ChatList messages={messages} sourcesForMessages={sourcesForMessages} />
+            <ChatList
+              messages={messages}
+              sourcesForMessages={sourcesForMessages}
+            />
             <ChatScrollAnchor trackVisibility={isLoading} />
           </>
         ) : (
@@ -103,7 +114,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         setChain={setChain}
         index={index}
         setIndex={setIndex}
-      />     
+      />
     </>
   )
 }

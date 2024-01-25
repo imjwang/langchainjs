@@ -1,11 +1,11 @@
-import { createSupabaseClient } from '@/lib/serverUtils';
-import { NextResponse } from "next/server";
-
+import { createSupabaseClient } from '@/lib/serverUtils'
+import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
   const supabase = createSupabaseClient()
-  const {data: {session}} = await supabase.auth.getSession()
-  
+  const {
+    data: { session }
+  } = await supabase.auth.getSession()
 
   if (!session?.user?.id) {
     return new Response('Unauthorized', {
@@ -18,6 +18,5 @@ export async function POST(req: Request) {
   // const { data, error } = await supabase.from("history").upsert({ history, user_id: session?.user?.id }).select()
 
   // return NextResponse.json(data)
-  return NextResponse.json({messages})
-
+  return NextResponse.json({ messages })
 }

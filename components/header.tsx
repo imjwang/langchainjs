@@ -23,7 +23,10 @@ import { IconHome } from '@/components/ui/icons'
 
 async function UserOrLogin() {
   const supabase = createSupabaseClient()
-  const { data: { session }, error } = await supabase.auth.getSession()
+  const {
+    data: { session },
+    error
+  } = await supabase.auth.getSession()
 
   return (
     <>
@@ -65,9 +68,9 @@ export function Header() {
           <UserOrLogin />
         </React.Suspense>
         <Button variant="outline" size="icon" className="ml-2">
-        <Link href="/">
-          <IconHome />
-        </Link>
+          <Link href="/">
+            <IconHome />
+          </Link>
         </Button>
       </div>
       <div className="flex items-center justify-end space-x-2">

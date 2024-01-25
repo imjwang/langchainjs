@@ -6,9 +6,9 @@ export interface Chat extends Record<string, any> {
   created_at: Date
   user_id: string
   path?: string
-  topic?: string,
-  color?: string,
-  emotion?: string,
+  topic?: string
+  color?: string
+  emotion?: string
   messages: Message[]
   sharePath?: string
 }

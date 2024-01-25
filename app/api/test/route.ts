@@ -1,4 +1,4 @@
-import { PromptTemplate, PipelinePromptTemplate } from "langchain/prompts"
+import { PromptTemplate, PipelinePromptTemplate } from 'langchain/prompts'
 
 export const runtime = 'edge'
 
@@ -12,38 +12,43 @@ export async function GET(req: Request) {
 {currentMessage}
 `
 
-const activityLoader = () => {
-  const getRandom = (array: Array<string>) => {
-    return array[Math.floor(Math.random() * array.length)];
+  const activityLoader = () => {
+    const getRandom = (array: Array<string>) => {
+      return array[Math.floor(Math.random() * array.length)]
+    }
+
+    const activities = [
+      'talking to squidward',
+      'karate with sandy',
+      'getting ripped off by mr. krabs'
+    ]
+    const activity = getRandom(activities)
+
+    return activity
   }
-
-  const activities = ["talking to squidward", "karate with sandy", "getting ripped off by mr. krabs"]
-  const activity = getRandom(activities)
-
-  return activity
-}
-
 
   const fullPrompt = PromptTemplate.fromTemplate(template)
 
   const partialFullPrompt = await fullPrompt.partial({
-    mood: "extremely frustrating",
-    activity: activityLoader,
+    mood: 'extremely frustrating',
+    activity: activityLoader
   })
 
-  const zeroShotPrompt = PromptTemplate.fromTemplate(`Let's think step by step.`)
+  const zeroShotPrompt = PromptTemplate.fromTemplate(
+    `Let's think step by step.`
+  )
 
   const promptTemplate = new PipelinePromptTemplate({
     pipelinePrompts: [
       {
-        name: "slot",
+        name: 'slot',
         prompt: zeroShotPrompt
-      },
+      }
     ],
-    finalPrompt: partialFullPrompt,
+    finalPrompt: partialFullPrompt
   })
 
-  const prompt = await promptTemplate.format({currentMessage: "How are you?"})
+  const prompt = await promptTemplate.format({ currentMessage: 'How are you?' })
 
   console.log(prompt)
 
@@ -57,5 +62,4 @@ Let's think step by step.
   
 How are you?
   */
-
 }

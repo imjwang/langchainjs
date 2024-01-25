@@ -56,7 +56,7 @@ export function SidebarItem({ chat, children }: SidebarItemProps) {
         >
           <span className="whitespace-nowrap">{chat.title}</span>
           <div className="flex gap-4">
-            <Badge style={{backgroundColor: chat.color}}>{chat.topic}</Badge>
+            <Badge style={{ backgroundColor: chat.color }}>{chat.topic}</Badge>
             <div>{chat.emotion}</div>
           </div>
         </div>

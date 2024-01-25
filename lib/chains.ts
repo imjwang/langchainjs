@@ -1,18 +1,21 @@
-"use server"
+'use server'
 
-import { Message } from 'ai';
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PromptTemplate } from "langchain/prompts";
-import { StructuredOutputParser } from "langchain/output_parsers";
-import { RunnableSequence } from "langchain/schema/runnable";
-import { revalidatePath } from "next/cache";
-import { BedrockChat } from "langchain/chat_models/bedrock";
-import { FormatInstructionsOptions, StringOutputParser, OutputParserException } from "langchain/schema/output_parser";
-import { XMLParser } from "fast-xml-parser"
-import { getExamples, createExamplesFromArray } from '@/app/langsmith-actions';
-import { BaseOutputParser } from 'langchain/schema/output_parser';
-import { RunCollectorCallbackHandler } from "langchain/callbacks";
-
+import { Message } from 'ai'
+import { ChatOpenAI } from 'langchain/chat_models/openai'
+import { PromptTemplate } from 'langchain/prompts'
+import { StructuredOutputParser } from 'langchain/output_parsers'
+import { RunnableSequence } from 'langchain/schema/runnable'
+import { revalidatePath } from 'next/cache'
+import { BedrockChat } from 'langchain/chat_models/bedrock'
+import {
+  FormatInstructionsOptions,
+  StringOutputParser,
+  OutputParserException
+} from 'langchain/schema/output_parser'
+import { XMLParser } from 'fast-xml-parser'
+import { getExamples, createExamplesFromArray } from '@/app/langsmith-actions'
+import { BaseOutputParser } from 'langchain/schema/output_parser'
+import { RunCollectorCallbackHandler } from 'langchain/callbacks'
 
 // export interface XMLParserFields {
 //   fields: string;
@@ -70,7 +73,7 @@ import { RunCollectorCallbackHandler } from "langchain/callbacks";
 //     try {
 //       const parsed = this.parser.parse(text, true);
 //       return this.outputKeys.reduce((acc, key) => {
-//         acc[key] 
+//         acc[key]
 //       })
 //     } catch (e) {
 //       throw new OutputParserException(`Could not parse output: ${text}`, text);
@@ -84,56 +87,55 @@ import { RunCollectorCallbackHandler } from "langchain/callbacks";
 //       throw new OutputParserException(`Could not parse output: ${text}`, text);
 //     }
 
-
 //     return output;
 //   }
 
 //   getFormatInstructions(options?: FormatInstructionsOptions | undefined): string {
 //     return `Parse the following XML: ${this.lc_kwargs.fields}`;
 //   }
-  
+
 //   const parsedResults = results.map((result: string) => parser.parse(result))
-// } 
-
-
+// }
 
 export async function getSaveObject(messages: Message[]) {
   const parser = StructuredOutputParser.fromNamesAndDescriptions({
-    title: "summary of conversation, should be a short sentence.",
-    topic: "topic of conversation, should be one word.",
-    color: "give the conversation a color depending on the contents, should be a hex color code.",
-    emotion: "emotional summary of the conversation, should be a series of 3 emojis.",
-  });
-  
+    title: 'summary of conversation, should be a short sentence.',
+    topic: 'topic of conversation, should be one word.',
+    color:
+      'give the conversation a color depending on the contents, should be a hex color code.',
+    emotion:
+      'emotional summary of the conversation, should be a series of 3 emojis.'
+  })
+
   const chain = RunnableSequence.from([
     {
       parseInstructions: () => parser.getFormatInstructions(),
-      messages: (input: {messages: Message[]}) => {
-        return input.messages?.map(({role, content}) => `${role}: ${content}`).join("\n");
-      },
-    }
-    ,
+      messages: (input: { messages: Message[] }) => {
+        return input.messages
+          ?.map(({ role, content }) => `${role}: ${content}`)
+          .join('\n')
+      }
+    },
     PromptTemplate.fromTemplate(
-      "Please analyze the following conversation:\n{messages}\n{parseInstructions}"
+      'Please analyze the following conversation:\n{messages}\n{parseInstructions}'
     ),
     new ChatOpenAI(),
-    parser,
-  ]);
-    
-  const response = await chain.invoke({
-    messages,
-  });
-  
-  return response;
-}
+    parser
+  ])
 
+  const response = await chain.invoke({
+    messages
+  })
+
+  return response
+}
 
 export async function createJokes(datasetId: string | undefined) {
   if (!datasetId) {
     return {
-      message: "No dataset found",
+      message: 'No dataset found',
       jokes: [],
-      id: ""
+      id: ''
     }
   }
 
@@ -147,13 +149,13 @@ Please output your jokes in <joke></joke> XML tags.
   const promptTemplate = PromptTemplate.fromTemplate(template)
 
   const model = new BedrockChat({
-    model: "anthropic.claude-v2:1",
-    region: "us-east-1",
+    model: 'anthropic.claude-v2:1',
+    region: 'us-east-1',
     maxTokens: 1000,
     temperature: 0.9,
     credentials: {
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!,
+      secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!
     }
   })
 
@@ -163,41 +165,49 @@ Please output your jokes in <joke></joke> XML tags.
     promptTemplate,
     model,
     new StringOutputParser(),
-    (text) => parser.parse(text),
+    text => parser.parse(text)
   ])
 
   const runCollector = new RunCollectorCallbackHandler()
-  const results = await chain.batch([
-    {topic: "AI"},
-    {topic: "javascript"},
-    {topic: "animals"},
-    {topic: "food"}
-  ],
-    {callbacks: [runCollector]}
+  const results = await chain.batch(
+    [
+      { topic: 'AI' },
+      { topic: 'javascript' },
+      { topic: 'animals' },
+      { topic: 'food' }
+    ],
+    { callbacks: [runCollector] }
   )
 
   try {
-    const parsedResults = runCollector.tracedRuns[0]?.outputs?.output.reduce((acc: any[], cur: any) => {
-      if (!cur.joke) {
-        return acc
-      }
-      return [...acc, ...cur.joke]
-    }, []) as string []
+    const parsedResults = runCollector.tracedRuns[0]?.outputs?.output.reduce(
+      (acc: any[], cur: any) => {
+        if (!cur.joke) {
+          return acc
+        }
+        return [...acc, ...cur.joke]
+      },
+      []
+    ) as string[]
 
     const uniqueParsedJokes = Array.from(new Set(parsedResults))
-    const newParsedJokes = uniqueParsedJokes.filter((joke: string) => !examples.includes(joke) && joke != undefined && joke !== typeof "string")
+    const newParsedJokes = uniqueParsedJokes.filter(
+      (joke: string) =>
+        !examples.includes(joke) &&
+        joke != undefined &&
+        joke !== typeof 'string'
+    )
 
     return {
       jokes: newParsedJokes,
       id: runCollector.tracedRuns[0].id,
-      message: "ok"
+      message: 'ok'
     }
-
   } catch (e) {
     return {
-      message: "No jokes created.",
-      jokes: [], 
-      id: ""
+      message: 'No jokes created.',
+      jokes: [],
+      id: ''
     }
   }
 }

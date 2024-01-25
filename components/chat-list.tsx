@@ -4,7 +4,7 @@ import { Separator } from '@/components/ui/separator'
 import { ChatMessage } from '@/components/chat-message'
 
 export interface ChatList {
-  messages: Message[],
+  messages: Message[]
   sourcesForMessages: Record<string, any>
 }
 

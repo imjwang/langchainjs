@@ -1,17 +1,23 @@
 'use client'
 
-import { getDatasetStatus, createDataset, deleteDataset } from "@/app/langsmith-actions";
-import { useState, useEffect } from "react";
-import { Button } from "./ui/button";
-import type { Dataset } from "langsmith";
-
+import {
+  getDatasetStatus,
+  createDataset,
+  deleteDataset
+} from '@/app/langsmith-actions'
+import { useState, useEffect } from 'react'
+import { Button } from './ui/button'
+import type { Dataset } from 'langsmith'
 
 type DatasetControlsProps = {
-  datasetName: string;
-  initialDataset: Dataset | null;
+  datasetName: string
+  initialDataset: Dataset | null
 }
 
-export function DatasetControls({datasetName, initialDataset}: DatasetControlsProps) {
+export function DatasetControls({
+  datasetName,
+  initialDataset
+}: DatasetControlsProps) {
   const [dataset, setDataset] = useState<Dataset | null>(initialDataset)
 
   async function checkDataset() {
@@ -35,12 +41,15 @@ export function DatasetControls({datasetName, initialDataset}: DatasetControlsPr
 
   return (
     <>
-    {
-      dataset ?
-      <Button variant="destructive" onClick={handleDelete}>Delete &quot;{datasetName}&quot; Dataset</Button>
-      :
-      <Button onClick={handleCreate}>Create &quot;{datasetName}&quot; Dataset</Button>
-    }
+      {dataset ? (
+        <Button variant="destructive" onClick={handleDelete}>
+          Delete &quot;{datasetName}&quot; Dataset
+        </Button>
+      ) : (
+        <Button onClick={handleCreate}>
+          Create &quot;{datasetName}&quot; Dataset
+        </Button>
+      )}
     </>
   )
 }

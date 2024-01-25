@@ -16,7 +16,10 @@ export async function generateMetadata({
   params
 }: ChatPageProps): Promise<Metadata> {
   const supabase = createSupabaseClient()
-  const { data: { session }, error } = await supabase.auth.getSession()
+  const {
+    data: { session },
+    error
+  } = await supabase.auth.getSession()
 
   if (!session?.user) {
     return {}
@@ -30,7 +33,10 @@ export async function generateMetadata({
 
 export default async function ChatPage({ params }: ChatPageProps) {
   const supabase = createSupabaseClient()
-  const { data: { session }, error } = await supabase.auth.getSession()
+  const {
+    data: { session },
+    error
+  } = await supabase.auth.getSession()
 
   if (!session?.user) {
     redirect(`/sign-in?next=/chat/${params.id}`)

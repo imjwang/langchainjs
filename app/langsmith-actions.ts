@@ -1,11 +1,10 @@
 'use server'
 
-import { Client } from "langsmith";
-import { type Dataset } from "langsmith";
-import { nanoid } from "ai";
-import { revalidatePath } from "next/cache";
-import { StringEvaluator } from "langsmith/evaluation"
-
+import { Client } from 'langsmith'
+import { type Dataset } from 'langsmith'
+import { nanoid } from 'ai'
+import { revalidatePath } from 'next/cache'
+import { StringEvaluator } from 'langsmith/evaluation'
 
 const client = new Client()
 
@@ -19,31 +18,31 @@ export async function createDataset(datasetName: string) {
   return dataset
 }
 
-export async function createExample(datasetName: string | undefined, prevState: any, formData: FormData) {
+export async function createExample(
+  datasetName: string | undefined,
+  prevState: any,
+  formData: FormData
+) {
   if (!datasetName) {
     return {
-      message: "No dataset found"
+      message: 'No dataset found'
     }
   }
 
-  const question = "Tell me a joke."
+  const question = 'Tell me a joke.'
   const joke = formData.get('joke') as string
 
   try {
-    await client.createExample(
-      { question },
-      { joke },
-      { datasetName }
-    )
+    await client.createExample({ question }, { joke }, { datasetName })
   } catch (error) {
     return {
-      message: "error"
+      message: 'error'
     }
   }
 
   if (joke === null) {
     return {
-      message: "No joke found"
+      message: 'No joke found'
     }
   }
 
@@ -56,21 +55,25 @@ export async function createExample(datasetName: string | undefined, prevState: 
 export async function deleteDataset(datasetName: string) {
   revalidatePath('/')
 
-  const datasetsGenerator = client.listDatasets({ datasetNameContains: datasetName })
+  const datasetsGenerator = client.listDatasets({
+    datasetNameContains: datasetName
+  })
 
   for await (const dataset of datasetsGenerator) {
-    await client.deleteDataset({datasetName: dataset.name})
+    await client.deleteDataset({ datasetName: dataset.name })
   }
 
   revalidatePath('/')
-  return "ok"
+  return 'ok'
 }
 
 export async function getDatasetStatus(datasetName: string) {
   revalidatePath('/')
 
-  const datasetsGenerator = client.listDatasets({ datasetNameContains: datasetName })
-  
+  const datasetsGenerator = client.listDatasets({
+    datasetNameContains: datasetName
+  })
+
   for await (const dataset of datasetsGenerator) {
     return dataset
   }
@@ -78,8 +81,9 @@ export async function getDatasetStatus(datasetName: string) {
   return null
 }
 
-
-export async function getExamples(datasetId: string | undefined): Promise<string[]> {
+export async function getExamples(
+  datasetId: string | undefined
+): Promise<string[]> {
   if (!datasetId) {
     return []
   }
@@ -96,17 +100,19 @@ export async function getExamples(datasetId: string | undefined): Promise<string
   return examples
 }
 
-
-export async function createExamplesFromArray(jokes: string[], datasetId: string | undefined) {
+export async function createExamplesFromArray(
+  jokes: string[],
+  datasetId: string | undefined
+) {
   if (!datasetId) {
     return {
-      message: "No dataset found"
+      message: 'No dataset found'
     }
   }
 
   for (const joke of jokes) {
     await client.createExample(
-      { question: "Tell me a joke." },
+      { question: 'Tell me a joke.' },
       { joke },
       { datasetId }
     )
@@ -118,8 +124,12 @@ export async function createExamplesFromArray(jokes: string[], datasetId: string
   }
 }
 
-
-export async function handleFeedback(runId: string, joke: string, datasetId: string | undefined, key: string) {
+export async function handleFeedback(
+  runId: string,
+  joke: string,
+  datasetId: string | undefined,
+  key: string
+) {
   try {
     await client.createFeedback(runId, key, { comment: joke })
     if (datasetId) {
@@ -127,16 +137,15 @@ export async function handleFeedback(runId: string, joke: string, datasetId: str
     }
   } catch (e) {
     return {
-      message: "error"
+      message: 'error'
     }
   }
 
   revalidatePath('/')
   return {
-    message: "success"
+    message: 'success'
   }
 }
-
 
 export async function jokesDatasetToJSONL(datasetId: string | undefined) {
   if (!datasetId) return null
@@ -147,11 +156,14 @@ export async function jokesDatasetToJSONL(datasetId: string | undefined) {
 
   for await (const entry of dataset) {
     // format for aws bedrock finetuning https://docs.aws.amazon.com/bedrock/latest/userguide/model-customization-prepare.html#model-customization-prepare-finetuning
-    const {inputs: { question: prompt }, outputs } = entry
-    formattedEntries.push({prompt, completion: outputs?.joke })
+    const {
+      inputs: { question: prompt },
+      outputs
+    } = entry
+    formattedEntries.push({ prompt, completion: outputs?.joke })
   }
   // @ts-ignore
-  const jsonl = formattedEntries.map(JSON.stringify).join('\n');
+  const jsonl = formattedEntries.map(JSON.stringify).join('\n')
 
   return jsonl
 }
