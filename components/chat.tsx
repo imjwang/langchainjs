@@ -31,6 +31,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   // for chain select
   const [chain, setChain] = useState('/api/chat')
   const [index, setIndex] = useState('demo')
+  const [push, setPush] = useState(false)
   // for retrieval
   const [sourcesForMessages, setSourcesForMessages] = useState<
     Record<string, any>
@@ -44,7 +45,8 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       body: {
         id,
         chain,
-        index
+        index,
+        push
       },
       onResponse(response) {
         if (response.status === 401) {
@@ -114,6 +116,8 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         setChain={setChain}
         index={index}
         setIndex={setIndex}
+        push={push}
+        setPush={setPush}
       />
     </>
   )

@@ -8,11 +8,9 @@ import {
 import { pull, push } from 'langchain/hub'
 import { AIMessage, HumanMessage, SystemMessage } from 'langchain/schema'
 import {
-  ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
   AIMessagePromptTemplate,
-  MessagesPlaceholder,
   PipelinePromptTemplate,
   PromptTemplate
 } from 'langchain/prompts'
@@ -28,7 +26,13 @@ import { NextResponse } from 'next/server'
 import { Client } from 'langsmith'
 import { LangChainTracer } from 'langchain/callbacks'
 import { BedrockAnthropicChat } from '@/lib/models'
-import { FewShotPromptTemplate } from 'langchain/prompts'
+import {
+  FewShotPromptTemplate,
+  ChatPromptTemplate,
+  MessagesPlaceholder
+} from 'langchain/prompts'
+import { BufferMemory } from 'langchain/memory'
+import { RunnablePassthrough } from 'langchain/schema/runnable'
 
 // export const runtime = 'edge'
 
@@ -165,6 +169,7 @@ You are having a {mood} {mood} {mood} day and just got done with {activity}.
   const model = new BedrockAnthropicChat({
     model: 'anthropic.claude-v2:1',
     region: 'us-east-1',
+    verbose: true,
     credentials: {
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
       secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!
@@ -253,7 +258,43 @@ A: {joke}
     inputVariables: []
   })
 
-  const stream = await chain3.stream({ currentMessage })
+  const chatPromptTemplate = ChatPromptTemplate.fromMessages([
+    ['system', 'You are a helpful assistant beep boop.'],
+    // new SystemMessage("You are a helpful assistant beep boop."),
+    new MessagesPlaceholder('history'),
+    ['human', 'Hi there! {currentMessage}'],
+    [
+      'ai',
+      "This user is a bit of a weirdo. I'm not sure how to respond. But I will reply with a joke."
+    ]
+  ])
+
+  const memory = new BufferMemory({
+    returnMessages: true,
+    inputKey: 'currentMessage',
+    outputKey: 'output',
+    memoryKey: 'history'
+  })
+
+  const chatChain = RunnableSequence.from([
+    {
+      currentMessage: ({ currentMessage }) => currentMessage,
+      memory: () => memory.loadMemoryVariables({})
+    },
+    {
+      currentMessage: ({ currentMessage }) => currentMessage,
+      history: ({ memory }) => memory.history
+    },
+    chatPromptTemplate,
+    prev => {
+      console.log(prev.messages)
+      return prev
+    },
+    model,
+    outputParser
+  ])
+
+  const stream = await chatChain.stream({ currentMessage })
 
   return new StreamingTextResponse(stream)
 }

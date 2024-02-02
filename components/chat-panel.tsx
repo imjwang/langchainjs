@@ -24,6 +24,8 @@ export interface ChatPanelProps
   setChain: (chain: string) => void
   index: string
   setIndex: (index: string) => void
+  push: boolean;
+  setPush: Function;
 }
 
 export function ChatPanel({
@@ -38,7 +40,9 @@ export function ChatPanel({
   chain,
   setChain,
   index,
-  setIndex
+  setIndex,
+  push,
+  setPush
 }: ChatPanelProps) {
   return (
     <div className="fixed inset-x-0 bottom-0 bg-gradient-to-b from-muted/10 from-10% to-muted/30 to-50%">
@@ -73,6 +77,8 @@ export function ChatPanel({
             setChain={setChain}
             index={index}
             setIndex={setIndex}
+            push={push}
+            setPush={setPush}
           />
           <PromptForm
             onSubmit={async value => {

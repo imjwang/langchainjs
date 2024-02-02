@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from 'clsx'
 import { customAlphabet } from 'nanoid'
 import { twMerge } from 'tailwind-merge'
+import { AIMessage, HumanMessage, SystemMessage } from 'langchain/schema'
+import type { Message } from 'ai'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -40,4 +42,14 @@ export function formatDate(input: string | number | Date): string {
     day: 'numeric',
     year: 'numeric'
   })
+}
+
+export function formatMessage(message: Message) {
+  if (message.role === 'system') {
+    return new SystemMessage(message.content)
+  } else if (message.role === 'user') {
+    return new HumanMessage(message.content)
+  } else {
+    return new AIMessage(message.content)
+  }
 }

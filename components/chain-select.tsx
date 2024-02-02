@@ -6,15 +6,19 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { CreateIndex } from '@/components/create-index'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from './ui/label'
 
 export interface ChainSelectProps {
   chain: string
   setChain: (chain: string) => void
   index: string
   setIndex: (index: string) => void
+  push: boolean,
+  setPush: Function
 }
 
-export function ChainSelect({ chain, setChain, index, setIndex }: any) {
+export function ChainSelect({ chain, setChain, index, setIndex, push, setPush }: any) {
   return (
     <div className="flex gap-2">
       <Select value={chain} onValueChange={setChain}>
@@ -47,6 +51,10 @@ export function ChainSelect({ chain, setChain, index, setIndex }: any) {
           <CreateIndex />
         </>
       )}
+      <div className="flex place-items-center gap-2">
+        <Checkbox className="size-5 stroke-black stroke-[20px]" value={push} onClick={() => setPush(!push)} />
+        <Label>push</Label>
+      </div>
     </div>
   )
 }
