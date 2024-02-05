@@ -17,7 +17,7 @@ import { AIMessage, HumanMessage, SystemMessage } from 'langchain/schema'
 import { formatMessage } from '@/lib/utils'
 import { ChatMessageHistory } from 'langchain/memory'
 import { RunnableWithMessageHistory } from '@langchain/core/runnables'
-import { push as pushToHub } from 'langchain/hub'
+import { push } from 'langchain/hub'
 
 export const runtime = 'edge'
 
@@ -31,28 +31,19 @@ export async function POST(req: Request) {
     })
   }
 
-  const { messages, push } = await req.json()
+  const { messages, pushToHub } = await req.json()
 
   const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage)
   const currentMessageContent = messages[messages.length - 1].content
 
   const memory = new ChatMessageHistory(formattedPreviousMessages)
 
-  const piratePrompt = await pull<PromptTemplate>('jaif/pirate')
-
-  const chatPromptTemplate = ChatPromptTemplate.fromMessages([
-    new SystemMessagePromptTemplate({ prompt: piratePrompt }),
-    new MessagesPlaceholder('history'),
-    HumanMessagePromptTemplate.fromTemplate('{input}'),
-    AIMessagePromptTemplate.fromTemplate(
-      'Arr matey! Let me sing you a shanty bout manatees first before we continue. '
-    )
-  ])
+  const pirateChatPrompt = await pull<ChatPromptTemplate>('jaif/piratechat')
 
   const model = new ChatOpenAI({})
   const outputParser = new BytesOutputParser()
 
-  const chain = chatPromptTemplate.pipe(model).pipe(outputParser)
+  const chain = pirateChatPrompt.pipe(model).pipe(outputParser)
 
   const chainWithHistory = new RunnableWithMessageHistory({
     runnable: chain,
@@ -66,9 +57,9 @@ export async function POST(req: Request) {
     input: currentMessageContent
   })
 
-  if (push) {
+  if (pushToHub) {
     try {
-      await pushToHub('jaif/piratechat', chatPromptTemplate)
+      await push('jaif/piratechat', pirateChatPrompt)
     } catch (e) {
       console.log(e)
     }

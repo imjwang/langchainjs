@@ -46,7 +46,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
         id,
         chain,
         index,
-        push
+        pushToHub: push
       },
       onResponse(response) {
         if (response.status === 401) {
@@ -81,7 +81,7 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       const { id: messageId } = data[0] as Chat
 
       if (!path.includes('chat')) {
-        router.push(`/chat/${messageId}`, { shallow: true })
+        router.push(`/chat/${messageId}`)
         router.refresh()
       }
     }

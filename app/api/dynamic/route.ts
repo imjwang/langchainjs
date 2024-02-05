@@ -15,7 +15,9 @@ import {
   MessagesPlaceholder,
   PipelinePromptTemplate,
   PromptTemplate
-} from 'langchain/prompts'
+} from '@langchain/core/prompts'
+import { formatMessage } from '@/lib/utils'
+
 import { ChatOpenAI } from 'langchain/chat_models/openai'
 import { createSupabaseClient } from '@/lib/serverUtils'
 import {
@@ -34,6 +36,8 @@ import { OpenAIEmbeddings } from 'langchain/embeddings/openai'
 import { ScoreThresholdRetriever } from 'langchain/retrievers/score_threshold'
 import { BedrockChat } from 'langchain/chat_models/bedrock'
 import { Document } from 'langchain/document'
+import { RunnableWithMessageHistory } from '@langchain/core/runnables'
+import { ChatMessageHistory } from 'langchain/memory'
 
 // export const runtime = 'edge' // can't get bedrock working for edge
 
@@ -68,10 +72,13 @@ export async function POST(req: Request) {
   const model = new BedrockChat({
     model: 'anthropic.claude-v2:1',
     region: 'us-east-1',
+    maxTokens: 1000,
+    temperature: 0.9,
     credentials: {
       accessKeyId: process.env.BEDROCK_AWS_ACCESS_KEY_ID!,
       secretAccessKey: process.env.BEDROCK_AWS_SECRET_ACCESS_KEY!
-    }
+    },
+    verbose: true
   })
 
   const reasoningCharacterPromptTemplate = (await pull(
@@ -261,40 +268,78 @@ Only output one char A, B, or C. Always return one of the three options even if 
     .pipe(stringParser)
     .pipe(classificationResultParser)
 
-  const reasoningChain = composedPartialReasoningPromptTemplate
+  const friendlyChatPromptTemplate = ChatPromptTemplate.fromMessages([
+    new SystemMessagePromptTemplate({ prompt: composedFriendPromptTemplate }),
+    new MessagesPlaceholder('history'),
+    HumanMessagePromptTemplate.fromTemplate('{currentMessage}')
+  ])
+
+  const reasoningChatPromptTemplate = ChatPromptTemplate.fromMessages([
+    new SystemMessagePromptTemplate({
+      prompt: composedPartialReasoningPromptTemplate
+    }),
+    new MessagesPlaceholder('history'),
+    HumanMessagePromptTemplate.fromTemplate('{currentMessage}')
+  ])
+
+  const funnyChatPromptTemplate = ChatPromptTemplate.fromMessages([
+    new SystemMessagePromptTemplate({
+      prompt: composedFunnyPromptTemplate
+    }),
+    new MessagesPlaceholder('history'),
+    HumanMessagePromptTemplate.fromTemplate('{currentMessage}')
+  ])
+
   const funnyChain = RunnableSequence.from([
     {
       currentMessage: ({ currentMessage }) => currentMessage,
       jokes: retrievalChain
     },
-    composedFunnyPromptTemplate
+    funnyChatPromptTemplate
   ])
-  const friendlyChain = composedFriendPromptTemplate
 
   const chainBranch = RunnableBranch.from([
-    [({ classification }) => classification === 'A', reasoningChain],
+    [
+      ({ classification }) => classification === 'A',
+      reasoningChatPromptTemplate
+    ],
     [({ classification }) => classification === 'B', funnyChain],
-    [({ classification }) => classification === 'C', friendlyChain],
-    friendlyChain
+    [
+      ({ classification }) => classification === 'C',
+      friendlyChatPromptTemplate
+    ],
+    friendlyChatPromptTemplate
   ])
+
+  const { messages } = await req.json()
+  const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage)
 
   const mainChain = RunnableSequence.from([
     {
-      currentMessage: async () => {
-        const { messages } = await req.json()
-        return messages[messages.length - 1].content
-      }
+      currentMessage: () => currentMessageContent,
+      history: i => i.history
     },
     {
       classification: classificationChain,
-      currentMessage: ({ currentMessage }) => currentMessage
+      currentMessage: ({ currentMessage }) => currentMessage,
+      history: i => i.history
     },
     chainBranch,
     model,
     bytesParser
   ])
 
-  const stream = await mainChain.stream({})
+  const currentMessageContent = messages[messages.length - 1].content
+  const memory = new ChatMessageHistory(formattedPreviousMessages)
+  const chainWithMemory = new RunnableWithMessageHistory({
+    runnable: mainChain,
+    getMessageHistory: () => memory,
+    inputMessagesKey: 'currentMessage',
+    historyMessagesKey: 'history',
+    config: { configurable: { sessionId: 1 } }
+  })
+
+  const stream = await chainWithMemory.stream({})
 
   return new StreamingTextResponse(stream)
 }

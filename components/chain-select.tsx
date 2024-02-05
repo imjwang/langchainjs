@@ -35,6 +35,7 @@ export function ChainSelect({ chain, setChain, index, setIndex, push, setPush }:
           <SelectItem value="/api/prompt">Prompt</SelectItem>
           <SelectItem value="/api/dynamic">Final</SelectItem>
           <SelectItem value="/api/jokes">Jokes</SelectItem>
+          <SelectItem value="/api/retrieval/health">Huberman</SelectItem>
         </SelectContent>
       </Select>
       {!chain.includes('/api/chat') && (

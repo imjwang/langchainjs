@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createSupabaseClient } from '@/lib/serverUtils'
 import { type Chat } from '@/lib/types'
+import type { Message } from 'ai'
+import { usePathname, useRouter } from 'next/navigation'
 
 export async function getChats(userId?: string | null) {
   if (!userId) {
@@ -61,6 +63,23 @@ export async function removeChat(id: string) {
 
   revalidatePath('/')
   return revalidatePath(`/chat/${id}`)
+}
+
+export async function saveChat(messages: Messages[], id: string | undefined) {
+  const supabase = createSupabaseClient()
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+
+  const { data, error } = await supabase
+    .from('history')
+    .upsert({ id, messages, user_id: user?.id })
+    .select()
+
+  if (!data) return 'error'
+
+  return data[0].id
 }
 
 export async function clearChats() {
