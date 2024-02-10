@@ -49,6 +49,7 @@
     "fast-xml-parser": "^4.3.4",
     "focus-trap-react": "^10.2.3",
     "geist": "^1.2.1",
+    "js-tiktoken": "^1.0.10",
     "langchain": "^0.1.11",
     "langsmith": "^0.0.63",
     "nanoid": "^5.0.4",
@@ -65,6 +66,7 @@
     "react-textarea-autosize": "^8.5.3",
     "remark-gfm": "^4.0.0",
     "remark-math": "^6.0.0",
+    "uuid": "^9.0.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {

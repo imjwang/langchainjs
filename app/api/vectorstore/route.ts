@@ -14,6 +14,29 @@ import { PDFLoader } from 'langchain/document_loaders/fs/pdf'
 import { CSVLoader } from 'langchain/document_loaders/fs/csv'
 import { Document } from 'langchain/document'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
+import { chunkArray } from '@langchain/core/utils/chunk_array'
+
+const stringOutputParser = new StringOutputParser()
+
+const template = `\
+Summarize the following conversation, paying close attention to any keywords and facts:
+{document}
+Summarize the conversation with a concise paragraph. Only include the most important concepts, takeaways, and any actionable advice.`
+
+const prompt = ChatPromptTemplate.fromMessages([['human', template]])
+
+// const model = new ChatGoogleGenerativeAI({
+//   modelName: 'gemini-pro',
+//   maxOutputTokens: 4096,
+//   verbose: true
+// })
+
+const model = new ChatOpenAI({
+  modelName: 'gpt-3.5-turbo-0125'
+  // verbose: true
+})
+
+const summarizationChain = prompt.pipe(model).pipe(stringOutputParser)
 
 export async function POST(req: Request) {
   const supabase = createSupabaseClient()
@@ -25,7 +48,7 @@ export async function POST(req: Request) {
 
   const splitter = new RecursiveCharacterTextSplitter({
     chunkSize: 20000,
-    chunkOverlap: 2000
+    chunkOverlap: 400
   })
 
   const loaderMap = (file: File) => {
@@ -35,52 +58,32 @@ export async function POST(req: Request) {
       case 'text/plain':
         return new TextLoader(file)
       case 'text/csv':
-        return new CSVLoader(file)
+        return new CSVLoader(file, 'content')
       default:
         return new TextLoader(file)
     }
   }
-  const stringOutputParser = new StringOutputParser()
 
-  const template = `\
-  Summarize the following conversation, paying close attention to any keywords and facts:
-  {document}
-  Summarize the conversation with a concise paragraph. Only include the most important concepts, takeaways, and any actionable advice.`
-
-  const prompt = ChatPromptTemplate.fromMessages([['human', template]])
-
-  // const model = new ChatGoogleGenerativeAI({
-  //   modelName: 'gemini-pro',
-  //   maxOutputTokens: 4096,
-  //   verbose: true
-  // })
-
-  const model = new ChatOpenAI({
-    modelName: 'gpt-3.5-turbo-0125',
-    verbose: true
-  })
-
-  const summarizationChain = prompt.pipe(model).pipe(stringOutputParser)
-
-  const documents: Document[] = []
-
+  const documents = []
+  let count = 0
   for (const file of files) {
+    count += 1
     const loader = loaderMap(file)
     const splitDocs = await loader.loadAndSplit(splitter)
-
     const splitDocumentText = splitDocs.map(({ pageContent }) => ({
       document: pageContent
     }))
-    console.log(splitDocumentText.length)
+    count += splitDocumentText.length
 
-    // return
     const responses = await summarizationChain.batch(splitDocumentText)
+
+    console.log(count)
 
     const summarizedDocuments = responses.reduce<Document[]>(
       (docs, res, idx) => {
         const summary = new Document({
           pageContent: res,
-          metadata: { source: 'huberman', metadata: splitDocs[idx].metadata }
+          metadata: { ...splitDocs[idx].metadata, source: 'huberman' }
         })
         return docs.concat(summary)
       },
@@ -100,7 +103,32 @@ export async function POST(req: Request) {
     // queryName: 'match_documents'
   })
 
-  const res = await vectorstore.addDocuments(documents)
+  const chunkedDocuments = chunkArray(documents, 1000)
 
-  return NextResponse.json({ res })
+  const chunkedRequests = chunkedDocuments.map(chunk => {
+    vectorstore.addDocuments(chunk)
+  })
+
+  const res = await Promise.allSettled(chunkedRequests)
+
+  let fails = 0
+  let successes = 0
+
+  for (const r of res) {
+    if (r.status === 'rejected') {
+      fails += 1
+    } else {
+      successes += 1
+    }
+  }
+
+  console.log(`fails: ${fails} success: ${successes}`)
+
+  return NextResponse.json({
+    results: {
+      fails,
+      successes
+      // mesg: 'ok'
+    }
+  })
 }

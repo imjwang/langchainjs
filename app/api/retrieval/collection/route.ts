@@ -39,26 +39,26 @@ export async function POST(req: Request) {
   const { error } = await supabase.rpc('create_documents_table', {
     table_name: tableName
   })
-  if (error) {
-    return NextResponse.json({ message: error.message })
-  }
+  // if (error) {
+  //   return NextResponse.json({ message: error.message })
+  // }
 
   const { error: indexError } = await supabase.rpc('create_hnsw_index', {
     table_name: tableName
   })
 
-  if (indexError) {
-    return NextResponse.json({ message: indexError.message })
-  }
+  // if (indexError) {
+  //   return NextResponse.json({ message: indexError.message })
+  // }
 
   const { error: collectionsError, data } = await supabase
     .from('dataset')
     .insert({ collection_name: tableName, user_id: session?.user?.id })
     .select()
 
-  if (collectionsError) {
-    return NextResponse.json({ message: collectionsError.message })
-  }
+  // if (collectionsError) {
+  //   return NextResponse.json({ message: collectionsError.message })
+  // }
 
   return NextResponse.json({ message: 'success', data }, { status: 201 })
 }

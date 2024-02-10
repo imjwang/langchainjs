@@ -4,6 +4,7 @@ import { twMerge } from 'tailwind-merge'
 import { AIMessage, HumanMessage, SystemMessage } from 'langchain/schema'
 import type { Message } from 'ai'
 import { chunkArray } from '@langchain/core/utils/chunk_array'
+import { Document } from 'langchain/document'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -227,5 +228,42 @@ export class GoogleGenerativeAIEmbeddings
    */
   embedDocuments(documents: string[]): Promise<number[][]> {
     return this.caller.call(this._embedDocumentsContent.bind(this), documents)
+  }
+}
+
+export class SupabaseDocstore {
+  private client: SupabaseClient
+
+  private tableName: string
+
+  constructor(client: SupabaseClient, tableName: string) {
+    this.client = client
+    this.tableName = tableName
+  }
+
+  async mget(ids: string[]) {
+    console.log('tablename', this.tableName)
+    console.log('ids', ids)
+    const { data, error } = await this.client
+      .from(this.tableName)
+      .select()
+      .in('uid', ids)
+
+    console.log('data', data)
+
+    const documents = data.map((row: any) => {
+      return new Document({
+        pageContent: row.content,
+        metadata: {
+          source: row.source
+        }
+      })
+    })
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return documents
   }
 }
