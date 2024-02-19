@@ -19,12 +19,21 @@ dependencies:
   '@langchain/cohere':
     specifier: ^0.0.3
     version: 0.0.3
+  '@langchain/community':
+    specifier: ^0.0.27
+    version: 0.0.27(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.504.0)(@aws-sdk/credential-provider-node@3.504.0)(@smithy/eventstream-codec@2.1.1)(@smithy/protocol-http@3.1.1)(@smithy/signature-v4@2.1.1)(@smithy/util-utf8@2.1.1)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.4)
   '@langchain/core':
-    specifier: ^0.1.20
-    version: 0.1.20
+    specifier: ^0.1.26
+    version: 0.1.26
   '@langchain/google-genai':
     specifier: ^0.0.9
     version: 0.0.9
+  '@langchain/langgraph':
+    specifier: ^0.0.4
+    version: 0.0.4
+  '@langchain/openai':
+    specifier: ^0.0.14
+    version: 0.0.14
   '@radix-ui/react-alert-dialog':
     specifier: ^1.0.5
     version: 1.0.5(@types/react-dom@18.2.18)(@types/react@18.2.50)(react-dom@18.2.0)(react@18.2.0)
@@ -89,8 +98,8 @@ dependencies:
     specifier: ^0.6.2
     version: 0.6.2
   ai:
-    specifier: ^2.2.33
-    version: 2.2.33(react@18.2.0)
+    specifier: ^2.2.35
+    version: 2.2.35(react@18.2.0)
   class-variance-authority:
     specifier: ^0.7.0
     version: 0.7.0
@@ -116,8 +125,8 @@ dependencies:
     specifier: ^1.0.10
     version: 1.0.10
   langchain:
-    specifier: ^0.1.11
-    version: 0.1.11(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.504.0)(@aws-sdk/credential-provider-node@3.504.0)(@smithy/eventstream-codec@2.1.1)(@smithy/protocol-http@3.1.1)(@smithy/signature-v4@2.1.1)(@smithy/util-utf8@2.1.1)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.4)(d3-dsv@3.0.1)(fast-xml-parser@4.3.4)(pdf-parse@1.1.1)
+    specifier: ^0.1.17
+    version: 0.1.17(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.504.0)(@aws-sdk/credential-provider-node@3.504.0)(@smithy/eventstream-codec@2.1.1)(@smithy/protocol-http@3.1.1)(@smithy/signature-v4@2.1.1)(@smithy/util-utf8@2.1.1)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.4)(d3-dsv@3.0.1)(fast-xml-parser@4.3.4)(pdf-parse@1.1.1)
   langsmith:
     specifier: ^0.0.63
     version: 0.0.63
@@ -914,14 +923,14 @@ packages:
     resolution: {integrity: sha512-+ph/SESIw8Ut/ngm55iVFIGzmdvitTvI5Y68UJUel5FKKA+y8zXpx6sLLohQ1wZWx83a2OAuGsm0B9Xxs4ERjA==}
     engines: {node: '>=18'}
     dependencies:
-      '@langchain/core': 0.1.20
+      '@langchain/core': 0.1.26
       cohere-ai: 7.7.4
     transitivePeerDependencies:
       - encoding
     dev: false
 
-  /@langchain/community@0.0.24(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.504.0)(@aws-sdk/credential-provider-node@3.504.0)(@smithy/eventstream-codec@2.1.1)(@smithy/protocol-http@3.1.1)(@smithy/signature-v4@2.1.1)(@smithy/util-utf8@2.1.1)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.4):
-    resolution: {integrity: sha512-kYzQoPxNQcvp6sycgoVKjpykFEbxLSHwXKFwZDjOuQwwdpQeVw1Np22PCwkg+I0/J8pAVrZf09Hkmcn6CfvxGg==}
+  /@langchain/community@0.0.27(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.504.0)(@aws-sdk/credential-provider-node@3.504.0)(@smithy/eventstream-codec@2.1.1)(@smithy/protocol-http@3.1.1)(@smithy/signature-v4@2.1.1)(@smithy/util-utf8@2.1.1)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.4):
+    resolution: {integrity: sha512-b/eV2MepDrGrImFbKdfiuhBYIQratKD45nILfmHpNJ4DFfs0RbCeZgyGBoIaVeIppnApkZmMGMisspjkDmJ+zA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@aws-crypto/sha256-js': ^5.0.0
@@ -962,20 +971,23 @@ packages:
       '@tensorflow/tfjs-converter': '*'
       '@tensorflow/tfjs-core': '*'
       '@upstash/redis': ^1.20.6
+      '@upstash/vector': ^1.0.2
       '@vercel/kv': ^0.2.3
       '@vercel/postgres': ^0.5.0
       '@writerai/writer-sdk': ^0.40.2
       '@xata.io/client': ^0.28.0
       '@xenova/transformers': ^2.5.4
       '@zilliz/milvus2-sdk-node': '>=2.2.7'
+      better-sqlite3: ^9.4.0
       cassandra-driver: ^4.7.2
       chromadb: '*'
-      closevector-common: 0.1.0-alpha.1
-      closevector-node: 0.1.0-alpha.10
-      closevector-web: 0.1.0-alpha.16
+      closevector-common: 0.1.3
+      closevector-node: 0.1.6
+      closevector-web: 0.1.6
       cohere-ai: '*'
       convex: ^1.3.1
       discord.js: ^14.14.1
+      dria: ^0.0.3
       faiss-node: ^0.5.1
       firebase-admin: ^11.9.0
       google-auth-library: ^8.9.0
@@ -995,14 +1007,14 @@ packages:
       pg-copy-streams: ^6.0.5
       pickleparser: ^0.2.1
       portkey-ai: ^0.1.11
-      redis: ^4.6.4
+      redis: '*'
       replicate: ^0.18.0
       typeorm: ^0.3.12
       typesense: ^1.5.3
       usearch: ^1.1.1
       vectordb: ^0.1.4
       voy-search: 0.6.2
-      weaviate-ts-client: ^1.4.0
+      weaviate-ts-client: '*'
       web-auth-library: ^1.0.3
       ws: ^8.14.2
     peerDependenciesMeta:
@@ -1082,6 +1094,8 @@ packages:
         optional: true
       '@upstash/redis':
         optional: true
+      '@upstash/vector':
+        optional: true
       '@vercel/kv':
         optional: true
       '@vercel/postgres':
@@ -1093,6 +1107,8 @@ packages:
       '@xenova/transformers':
         optional: true
       '@zilliz/milvus2-sdk-node':
+        optional: true
+      better-sqlite3:
         optional: true
       cassandra-driver:
         optional: true
@@ -1109,6 +1125,8 @@ packages:
       convex:
         optional: true
       discord.js:
+        optional: true
+      dria:
         optional: true
       faiss-node:
         optional: true
@@ -1172,8 +1190,8 @@ packages:
       '@aws-crypto/sha256-js': 5.2.0
       '@aws-sdk/client-bedrock-runtime': 3.504.0
       '@aws-sdk/credential-provider-node': 3.504.0
-      '@langchain/core': 0.1.20
-      '@langchain/openai': 0.0.13
+      '@langchain/core': 0.1.26
+      '@langchain/openai': 0.0.14
       '@smithy/eventstream-codec': 2.1.1
       '@smithy/protocol-http': 3.1.1
       '@smithy/signature-v4': 2.1.1
@@ -1188,8 +1206,8 @@ packages:
       - encoding
     dev: false
 
-  /@langchain/core@0.1.20:
-    resolution: {integrity: sha512-oGXxc2G8BMYyNKrE5UCbL2hPaxqUkS+xw9NVXKM9Hn6si5WJ73eb4hax9kuNB2TSQqankwmRERPs18d1NoLpuA==}
+  /@langchain/core@0.1.26:
+    resolution: {integrity: sha512-NtoNqBsK2wEpWnRsiDMtmkYu1J9S6plfzYPvk46ZOHylaj3XGeNdirpERtcHP61I8i0nLzZkuT00o/KOwrdAyQ==}
     engines: {node: '>=18'}
     dependencies:
       ansi-styles: 5.2.0
@@ -1210,14 +1228,21 @@ packages:
     engines: {node: '>=18'}
     dependencies:
       '@google/generative-ai': 0.1.3
-      '@langchain/core': 0.1.20
+      '@langchain/core': 0.1.26
     dev: false
 
-  /@langchain/openai@0.0.13:
-    resolution: {integrity: sha512-kgPwFiUA5Abmt8Q/cDhC4o1o5QAYuq962CqneVieMIgTUOJhYqB8Na4/7JI0EIfEZuUP2uuTrtqsulbLpGNQ8w==}
+  /@langchain/langgraph@0.0.4:
+    resolution: {integrity: sha512-GFFOAJ3XAP++/Vjp1/KcqL+c8aabKr1D+xT8Yxtn+P4/jc2ezjVE46bjJG16hP1y68X3uuKUKqzTTqsrupphXQ==}
     engines: {node: '>=18'}
     dependencies:
-      '@langchain/core': 0.1.20
+      '@langchain/core': 0.1.26
+    dev: false
+
+  /@langchain/openai@0.0.14:
+    resolution: {integrity: sha512-co6nRylPrLGY/C3JYxhHt6cxLq07P086O7K3QaZH7SFFErIN9wSzJonpvhZR07DEUq6eK6wKgh2ORxA/NcjSRQ==}
+    engines: {node: '>=18'}
+    dependencies:
+      '@langchain/core': 0.1.26
       js-tiktoken: 1.0.10
       openai: 4.26.0
       zod: 3.22.4
@@ -2861,8 +2886,8 @@ packages:
       humanize-ms: 1.2.1
     dev: false
 
-  /ai@2.2.33(react@18.2.0):
-    resolution: {integrity: sha512-y9iMgt/RjFZCrjx5NuC+tdZqvunM9Bo1ufuC1BpgyjPmmE2RYduM+3Whjez0fu808KkwTQvvhUhhC5NkAy8/9g==}
+  /ai@2.2.35(react@18.2.0):
+    resolution: {integrity: sha512-YzR56VAMjqvGIVzMUFwH7jjo7K+Z3Old4nXcigiWsuqXnWQeQi3iPR8p2/xOZzmuZyMTOC+6jjbIJ8hoEOhfcQ==}
     engines: {node: '>=14.6'}
     peerDependencies:
       react: ^18.2.0
@@ -4717,8 +4742,8 @@ packages:
       json-buffer: 3.0.1
     dev: true
 
-  /langchain@0.1.11(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.504.0)(@aws-sdk/credential-provider-node@3.504.0)(@smithy/eventstream-codec@2.1.1)(@smithy/protocol-http@3.1.1)(@smithy/signature-v4@2.1.1)(@smithy/util-utf8@2.1.1)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.4)(d3-dsv@3.0.1)(fast-xml-parser@4.3.4)(pdf-parse@1.1.1):
-    resolution: {integrity: sha512-Ma1QW8pX0BAgnmgL5J97WQ17Ir46b8lWiZ3s+sK5iS6zicJzalx0J9FUdFg4XAFzLj6Dy1oHoXcupjrOZLQGOA==}
+  /langchain@0.1.17(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.504.0)(@aws-sdk/credential-provider-node@3.504.0)(@smithy/eventstream-codec@2.1.1)(@smithy/protocol-http@3.1.1)(@smithy/signature-v4@2.1.1)(@smithy/util-utf8@2.1.1)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.4)(d3-dsv@3.0.1)(fast-xml-parser@4.3.4)(pdf-parse@1.1.1):
+    resolution: {integrity: sha512-w+fSAxsPdeMpJMhbS1Ur/dRhgRvw4j/vqD5kgfgmZNAh5X3nz5BXktcsyH8hwXLjuoFJMUyp3mIFy60APrY0Vw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@aws-sdk/client-s3': ^3.310.0
@@ -4747,7 +4772,6 @@ packages:
       faiss-node: '*'
       fast-xml-parser: ^4.2.7
       google-auth-library: ^8.9.0
-      googleapis: ^126.0.1
       handlebars: ^4.7.8
       html-to-text: ^9.0.5
       ignore: ^5.2.0
@@ -4826,8 +4850,6 @@ packages:
         optional: true
       google-auth-library:
         optional: true
-      googleapis:
-        optional: true
       handlebars:
         optional: true
       html-to-text:
@@ -4881,9 +4903,9 @@ packages:
     dependencies:
       '@anthropic-ai/sdk': 0.9.1
       '@aws-sdk/credential-provider-node': 3.504.0
-      '@langchain/community': 0.0.24(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.504.0)(@aws-sdk/credential-provider-node@3.504.0)(@smithy/eventstream-codec@2.1.1)(@smithy/protocol-http@3.1.1)(@smithy/signature-v4@2.1.1)(@smithy/util-utf8@2.1.1)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.4)
-      '@langchain/core': 0.1.20
-      '@langchain/openai': 0.0.13
+      '@langchain/community': 0.0.27(@aws-crypto/sha256-js@5.2.0)(@aws-sdk/client-bedrock-runtime@3.504.0)(@aws-sdk/credential-provider-node@3.504.0)(@smithy/eventstream-codec@2.1.1)(@smithy/protocol-http@3.1.1)(@smithy/signature-v4@2.1.1)(@smithy/util-utf8@2.1.1)(@supabase/supabase-js@2.39.3)(cohere-ai@7.7.4)
+      '@langchain/core': 0.1.26
+      '@langchain/openai': 0.0.14
       '@supabase/supabase-js': 2.39.3
       binary-extensions: 2.2.0
       d3-dsv: 3.0.1
@@ -4933,18 +4955,22 @@ packages:
       - '@tensorflow/tfjs-converter'
       - '@tensorflow/tfjs-core'
       - '@upstash/redis'
+      - '@upstash/vector'
       - '@vercel/postgres'
       - '@writerai/writer-sdk'
       - '@xenova/transformers'
       - '@zilliz/milvus2-sdk-node'
+      - better-sqlite3
       - cassandra-driver
       - closevector-common
       - closevector-node
       - closevector-web
       - cohere-ai
       - discord.js
+      - dria
       - encoding
       - firebase-admin
+      - googleapis
       - hnswlib-node
       - llmonitor
       - lodash

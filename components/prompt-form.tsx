@@ -15,15 +15,17 @@ import { useRouter } from 'next/navigation'
 
 export interface PromptProps
   extends Pick<UseChatHelpers, 'input' | 'setInput'> {
-  onSubmit: (value: string) => Promise<void>
+  onSubmit: any
   isLoading: boolean
+  handleInputChange: any
 }
 
 export function PromptForm({
   onSubmit,
   input,
   setInput,
-  isLoading
+  isLoading,
+  handleInputChange
 }: PromptProps) {
   const { formRef, onKeyDown } = useEnterSubmit()
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
@@ -37,14 +39,7 @@ export function PromptForm({
 
   return (
     <form
-      onSubmit={async e => {
-        e.preventDefault()
-        if (!input?.trim()) {
-          return
-        }
-        setInput('')
-        await onSubmit(input)
-      }}
+      onSubmit={onSubmit}
       ref={formRef}
     >
       <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-background px-8 sm:rounded-md sm:border sm:px-12">
@@ -58,7 +53,7 @@ export function PromptForm({
               }}
               className={cn(
                 buttonVariants({ size: 'sm', variant: 'outline' }),
-                'absolute left-0 top-4 h-8 w-8 rounded-full bg-background p-0 sm:left-4'
+                'absolute left-0 top-4 size-8 rounded-full bg-background p-0 sm:left-4'
               )}
             >
               <IconPlus />
@@ -73,7 +68,7 @@ export function PromptForm({
           onKeyDown={onKeyDown}
           rows={1}
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={handleInputChange}
           placeholder="Send a message."
           spellCheck={false}
           className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"

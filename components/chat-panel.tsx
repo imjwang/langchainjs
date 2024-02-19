@@ -11,14 +11,16 @@ import { getSaveObject } from '@/lib/chains'
 export interface ChatPanelProps
   extends Pick<
     UseChatHelpers,
-    | 'append'
+    // | 'append'
     | 'isLoading'
-    | 'reload'
+    // | 'reload'
     | 'messages'
-    | 'stop'
+    // | 'stop'
     | 'input'
     | 'setInput'
   > {
+  submitMessage: any,
+  handleInputChange: any,
   id?: string
   chain: string
   setChain: (chain: string) => void
@@ -31,9 +33,9 @@ export interface ChatPanelProps
 export function ChatPanel({
   id,
   isLoading,
-  stop,
-  append,
-  reload,
+  // stop,
+  // append,
+  // reload,
   input,
   setInput,
   messages,
@@ -42,7 +44,9 @@ export function ChatPanel({
   index,
   setIndex,
   push,
-  setPush
+  setPush,
+  submitMessage,
+  handleInputChange
 }: ChatPanelProps) {
   return (
     <div className="fixed inset-x-0 bottom-0 bg-gradient-to-b from-muted/10 from-10% to-muted/30 to-50%">
@@ -52,7 +56,7 @@ export function ChatPanel({
           {isLoading ? (
             <Button
               variant="outline"
-              onClick={() => stop()}
+              // onClick={() => stop()}
               className="bg-background"
             >
               <IconStop className="mr-2" />
@@ -62,7 +66,7 @@ export function ChatPanel({
             messages?.length > 0 && (
               <Button
                 variant="outline"
-                onClick={() => reload()}
+                // onClick={() => reload()}
                 className="bg-background"
               >
                 <IconRefresh className="mr-2" />
@@ -81,14 +85,9 @@ export function ChatPanel({
             setPush={setPush}
           />
           <PromptForm
-            onSubmit={async value => {
-              await append({
-                id,
-                content: value,
-                role: 'user'
-              })
-            }}
+            onSubmit={submitMessage}
             input={input}
+            handleInputChange={handleInputChange}
             setInput={setInput}
             isLoading={isLoading}
           />

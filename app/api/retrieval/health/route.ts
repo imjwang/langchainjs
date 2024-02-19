@@ -76,10 +76,10 @@ async function getHydeRetriever() {
     searchKwargs: {
       fetchK: 20,
       lambda: 0.5
-    },
-    filter: {
-      source: 'huberman'
     }
+    // filter: {
+    //   source: 'huberman'
+    // }
   })
 }
 
@@ -133,9 +133,9 @@ The following are excerpts from the podcast:
 Question:
 {question}
 
-Let's use the summaries to think about what is important. Extract the most important information from the excepts with regards to the user question so I can advise them further.
+Let's use the summaries to think about what is important. Extract the most important information from the excepts with regards to the user question so I can advise them further as their doctor.
 `)
-
+//@ts-ignore
 const compressionChain = RunnableSequence.from([
   compressionPrompt,
   model,
@@ -143,7 +143,7 @@ const compressionChain = RunnableSequence.from([
 ])
 
 const humanTemplate = `Please provide general health advice to answer the user's question.
-Use the following information for reference. It has been curated for you from a podcast with a top health professional who has a PhD from Stanford University:
+Use the following information for reference. The information is from podcast with a top health professional who has a PhD from Stanford University. It has been curated by experts.
 
 Summaries:
 {summaries}
@@ -154,7 +154,8 @@ Important notes:
 Question:
 {question}
 
-Let's think through our response as it's very important for the user. Use the most relevant information from the podcast to answer.`
+Let's think through our response as it's very important for the user. Use the most relevant information from the podcast to answer.
+`
 
 const chatPrompt = ChatPromptTemplate.fromMessages([
   // ['system', systemTemplate], // not available on gemini
@@ -175,7 +176,7 @@ const chatPrompt = ChatPromptTemplate.fromMessages([
 
 async function getChain(messages: BaseMessage[]) {
   const memory = new ChatMessageHistory(messages)
-
+  //@ts-ignore
   const chain = RunnableSequence.from([
     {
       summaries: hydeChain,

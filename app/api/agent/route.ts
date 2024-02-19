@@ -1,173 +1,295 @@
-//next
-import { NextResponse } from 'next/server'
-// ai sdk
-import { StreamingTextResponse, Message } from 'ai'
-// chat
-import { ChatOpenAI } from 'langchain/chat_models/openai'
-import { BytesOutputParser } from 'langchain/schema/output_parser'
-// prompt
-import { ChatPromptTemplate, MessagesPlaceholder } from 'langchain/prompts'
-import { createSupabaseClient } from '@/lib/serverUtils'
-import { SupabaseVectorStore } from 'langchain/vectorstores/supabase'
-import { OpenAIEmbeddings } from 'langchain/embeddings/openai' // Replace this with your embedding model
-import { HydeRetriever } from 'langchain/retrievers/hyde'
-// chain
-import { RunnableSequence } from 'langchain/schema/runnable'
-import { formatDocumentsAsString } from 'langchain/util/document'
-// agent
-import { DynamicTool } from 'langchain/tools'
-import { AgentExecutor } from 'langchain/agents'
-import { Calculator } from 'langchain/tools/calculator'
+import { ChatOpenAI } from '@langchain/openai'
+import { TavilySearchResults } from '@langchain/community/tools/tavily_search'
+import { ToolExecutor } from '@langchain/langgraph/prebuilt'
+import { convertToOpenAIFunction } from '@langchain/core/utils/function_calling'
 import {
-  AgentAction,
-  AgentFinish,
-  AgentStep,
+  FunctionMessage,
   BaseMessage,
-  AIMessage,
-  HumanMessage,
-  SystemMessage,
-  InputValues
-} from 'langchain/schema'
-import { formatLogToString } from 'langchain/agents/format_scratchpad/log'
-import { XMLAgentOutputParser } from 'langchain/agents/xml/output_parser'
-import { renderTextDescription } from 'langchain/tools/render'
-import { formatLogToMessage } from 'langchain/agents/format_scratchpad/log_to_message'
-import type { Tool } from 'langchain/tools'
+  HumanMessage
+} from '@langchain/core/messages'
+import { AgentAction } from '@langchain/core/agents'
+import { StateGraph, END } from '@langchain/langgraph'
+import { RunnableLambda, RunnableSequence } from '@langchain/core/runnables'
+import { BytesOutputParser } from '@langchain/core/output_parsers'
+import {
+  AgentExecutor,
+  AgentStep,
+  createOpenAIToolsAgent
+} from 'langchain/agents'
+import { formatMessage } from '@/lib/utils'
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+  PromptTemplate
+} from '@langchain/core/prompts'
+import { RunnableWithMessageHistory } from '@langchain/core/runnables'
+import { StreamingTextResponse } from 'ai'
+// import { OpenAIAssistantRunnable } from 'langchain/experimental/openai_assistant'
+import { RemoteRunnable } from '@langchain/core/runnables/remote'
+import { ChatMessageHistory } from 'langchain/memory'
+import { OpenAIFunctionsAgentOutputParser } from 'langchain/agents/openai/output_parser'
+import { formatToOpenAIFunctionMessages } from 'langchain/agents/format_scratchpad'
+import { z } from 'zod'
+import { convertToOpenAITool } from '@langchain/core/utils/function_calling'
+import { DynamicStructuredTool } from '@langchain/core/tools'
+import { getHydeChain, getParentDocumentsChain } from '@/lib/chains'
+import { MessageContentText } from 'openai/resources/beta/threads/messages/messages'
+import { OpenAIAssistantRunnable } from '@/lib/utils'
+import { experimental_AssistantResponse as AssistantResponse } from 'ai'
 
-export const runtime = 'edge'
+// export const runtime = 'edge'
 
-const formatMessage = (message: Message) => {
-  if (message.role === 'system') {
-    return new SystemMessage(message.content)
-  } else if (message.role === 'user') {
-    return new HumanMessage(message.content)
-  } else {
-    return new AIMessage(message.content)
-  }
+type FunctionMessage = {
+  tool: string
+  toolInput: any
+  toolCallId: string
+  log: string
+  runId: string
+  threadId: string
+}
+
+type ToolCall = {
+  tool_call_id: string
+  output: string
 }
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseClient()
-  const { data, error } = await supabase.auth.getSession()
+  const hydeChain = await getHydeChain(10, 20)
 
-  if (!data.session?.user) {
-    return new Response('Unauthorized', {
-      status: 401
+  const hubermanParentDocumentsChain = await getParentDocumentsChain(
+    40,
+    'huberman'
+  )
+  // const lexParentDocumentsChain = getParentDocumentsChain(40, 'lex')
+
+  async function retrieveHubermanSummaries(question: string) {
+    const summaries = await hydeChain.invoke({ question })
+    return summaries
+  }
+
+  async function retrieveHubermanTranscripts(question: string) {
+    const transcripts = await hubermanParentDocumentsChain.invoke({ question })
+    return transcripts
+  }
+
+  const summmaryRetrievalTool = new DynamicStructuredTool({
+    name: 'retrieve_summaries',
+    description: `Retrieves professionally curated summaries from The Huberman Lab podcast which is a show hosted by Dr. Andrew Huberman, a neuroscientist and professor at Stanford University. \
+  The podcast focuses on neuroscience and biology, aiming to provide listeners with practical tools derived from scientific research that can improve various aspects of life, \
+  such as health, performance, and well-being.`,
+    schema: z.object({
+      question: z.string()
+    }),
+    func: async ({ question }) => retrieveHubermanSummaries(question)
+  })
+
+  const transcriptRetrievalTool = new DynamicStructuredTool({
+    name: 'retrieve_details',
+    description: `Retrieves important details from The Huberman Lab podcast which is a show hosted by Dr. Andrew Huberman, a neuroscientist and professor at Stanford University. \
+  The podcast focuses on neuroscience and biology, aiming to provide listeners with practical tools derived from scientific research that can improve various aspects of life, \
+  such as health, performance, and well-being.`,
+    schema: z.object({
+      question: z.string()
+    }),
+    func: async ({ question }) => retrieveHubermanTranscripts(question)
+  })
+
+  // async function retrieveLexTranscripts(question: string) {
+  //   const transcripts = await lexParentDocumentsChain.invoke({ question })
+  //   return transcripts
+  // }
+
+  const tools = [
+    new TavilySearchResults({
+      maxResults: 5
+      // kwargs: {
+      //   raw
+      // }
+    }),
+    transcriptRetrievalTool,
+    summmaryRetrievalTool
+  ]
+
+  const toolExecutor = new ToolExecutor({
+    tools
+  })
+
+  const agentState = {
+    threadId: {
+      value: (x: string, y: string) => y,
+      default: () => ''
+    },
+    toolCallId: {
+      value: (x: string, y: string) => y,
+      default: () => ''
+    },
+    message: {
+      value: (
+        x: Array<BaseMessage> | Array<FunctionMessage> | Array<ToolCall>,
+        y: Array<BaseMessage> | Array<FunctionMessage> | Array<ToolCall>
+      ) => y,
+      default: () => {}
+    },
+    runId: {
+      value: (x: string, y: string) => y,
+      default: () => ''
+    }
+  }
+
+  // Define the function that determines whether to continue or not
+  const shouldContinue = (state: { message: Array<BaseMessage> }) => {
+    const { message } = state
+    if (!Array.isArray(message)) return 'end'
+    if (!message[0].tool) {
+      return 'end'
+    }
+    return 'continue'
+  }
+
+  // Define the function that calls the model
+  const callModel = async (state: {
+    message: Array<BaseMessage>
+    threadId: string
+  }) => {
+    const { message, threadId } = state
+    console.log('THREAD ID: ', threadId)
+    let outputs
+    if (threadId) {
+      outputs = await assistantAgent.invoke({
+        threadId,
+        content: message
+      })
+    } else {
+      outputs = await assistantAgent.invoke({
+        content: message
+      })
+    }
+    console.log('outputs: ', outputs)
+    // We return a list, because this will get added to the existing list
+    return {
+      message: outputs,
+      threadId: outputs.threadId ?? outputs[0].threadId,
+      // messageId: outputs.id,
+      runId: outputs.runId ?? outputs[0].runId,
+      toolCallId: Array.isArray(outputs) ? outputs[0].toolCallId : undefined
+    }
+  }
+
+  const returnToolResults = async (state: {
+    message: Array<ToolCall>
+    threadId: string
+    runId: string
+    toolCallId: string
+  }) => {
+    const { message, threadId, runId } = state
+    console.log('thread and run id: ', threadId, runId)
+    const outputs = await assistantAgent.invoke({
+      threadId,
+      runId,
+      toolOutputs: message
+    })
+    console.log('resulting generation: ', outputs)
+    // We return a list, because this will get added to the existing list
+    return {
+      message: outputs,
+      threadId: outputs.threadId ?? outputs[0].threadId,
+      // messageId: outputs.id,
+      runId: outputs.runId ?? outputs[0].runId,
+      toolCallId: Array.isArray(outputs) ? outputs[0].toolCallId : undefined
+    }
+  }
+
+  const callTool = async (state: {
+    message: Array<FunctionMessage>
+    threadId: string
+  }) => {
+    const { message, threadId } = state
+
+    const toolCalls = message.map(m => toolExecutor.invoke(m))
+    const toolResults = await Promise.allSettled(toolCalls)
+
+    const formattedResponses = toolResults.map((result, index) => {
+      if (result.status === 'rejected') {
+        throw new Error('Tool call failed: ', result.reason)
+      }
+      return {
+        output: result.value,
+        tool_call_id: message[index].toolCallId
+      }
+    })
+
+    return { message: formattedResponses }
+  }
+
+  const prompt = PromptTemplate.fromTemplate(
+    `Please provide general health advice to answer the user's question. \
+Let's think through our response as it's very important for the user. \
+Use a combination of Tools to retrieve the gather the most possible information. \
+Use the most relevant information from the podcast to answer.`
+  )
+
+  const instructions = await prompt.format({})
+
+  const assistantAgent = await OpenAIAssistantRunnable.createAssistant({
+    model: 'gpt-4-turbo-preview',
+    instructions,
+    name: 'Health Assistant',
+    asAgent: true,
+    tools
+  })
+
+  const { message, threadId } = await req.json()
+
+  const workflow = new StateGraph({
+    channels: agentState
+  })
+
+  workflow.addNode('agent', new RunnableLambda({ func: callModel }))
+  workflow.addNode('action', new RunnableLambda({ func: callTool }))
+  workflow.addNode(
+    'sendResults',
+    new RunnableLambda({ func: returnToolResults })
+  )
+  workflow.setEntryPoint('agent')
+  workflow.addConditionalEdges('agent', shouldContinue, {
+    continue: 'action',
+    end: END
+  })
+
+  workflow.addEdge('action', 'sendResults')
+  workflow.addConditionalEdges('sendResults', shouldContinue, {
+    continue: 'action',
+    end: END
+  })
+  const app = workflow.compile()
+
+  let outputs
+  if (threadId) {
+    outputs = await app.invoke({
+      threadId,
+      message
+    })
+  } else {
+    outputs = await app.invoke({
+      message
     })
   }
 
-  const { messages, index } = await req.json()
-  const collectionDescription =
-    'This is a collection of transcripts from a health and fitness podcast'
+  console.log('final outputs: ', outputs)
 
-  const model = new ChatOpenAI({ verbose: true }).bind({
-    stop: ['</tool_input>', '</final_answer>']
-  })
-
-  const vectorStore = await SupabaseVectorStore.fromExistingIndex(
-    new OpenAIEmbeddings(),
-    {
-      client: supabase,
-      tableName: index,
-      queryName: 'match_documents',
-      filter: {
-        index
-      }
+  return AssistantResponse(
+    { threadId: outputs.threadId, messageId: '' },
+    async ({ sendMessage }) => {
+      sendMessage({
+        id: '',
+        role: 'assistant',
+        content: [
+          {
+            type: 'text',
+            text: { value: outputs.message.returnValues.output }
+          }
+        ] as Array<MessageContentText>
+      })
     }
   )
-
-  const retriever = vectorStore.asRetriever(4)
-
-  async function getRelevantDocuments(query: string) {
-    const relevantDocs = await retriever.getRelevantDocuments(query)
-    const serialized = formatDocumentsAsString(relevantDocs)
-    return serialized
-  }
-
-  const retrieverTool = new DynamicTool({
-    name: 'Query Vectorstore',
-    description: `call this to get relevent information from a vectorstore with the following description:\n${collectionDescription}\nThe input should be a string`,
-    func: getRelevantDocuments
-  })
-
-  const AGENT_INSTRUCTIONS = `You are a helpful assistant. Help the user answer any questions.
-
-  You have access to the following tools:
-  
-  {tools}
-  
-  In order to use a tool, you can use <tool></tool> and <tool_input></tool_input> tags.
-  You will then get back a response in the form <observation></observation>
-  For example, if you have a tool called 'search' that could run a google search, in order to search for the weather in SF you would respond:
-  
-  <tool>search</tool><tool_input>weather in SF</tool_input>
-  <observation>64 degrees</observation>
-  
-  When you are done, respond with a final answer between <final_answer></final_answer>. For example:
-  
-  <final_answer>The weather in SF is 64 degrees</final_answer>
-  
-  Begin!
-  
-  Question: {input}`
-
-  const systemTemplate = `You are a helpful friend and medical professional.`
-
-  const prompt = ChatPromptTemplate.fromMessages([
-    ['system', systemTemplate],
-    new MessagesPlaceholder('chatHistory'),
-    new MessagesPlaceholder('agent_scratchpad'),
-    ['human', AGENT_INSTRUCTIONS]
-  ])
-
-  const tools = [new Calculator(), retrieverTool]
-
-  const chain = RunnableSequence.from([
-    {
-      input: (i: {
-        input: string
-        tools: Tool[]
-        steps: AgentStep[]
-        previousMessages: Message[]
-      }) => i.input,
-      agent_scratchpad: (i: {
-        input: string
-        tools: Tool[]
-        steps: AgentStep[]
-        previousMessages: Message[]
-      }) => formatLogToMessage(i.steps),
-      tools: (i: {
-        input: string
-        tools: Tool[]
-        steps: AgentStep[]
-        previousMessages: Message[]
-      }) => renderTextDescription(i.tools),
-      chatHistory: (i: {
-        input: string
-        tools: Tool[]
-        steps: AgentStep[]
-        previousMessages: Message[]
-      }) => i.previousMessages?.map(formatMessage)
-    },
-    prompt,
-    model,
-    new XMLAgentOutputParser()
-  ])
-
-  const executor = new AgentExecutor({
-    agent: chain,
-    tools
-  })
-
-  const previousMessages = messages.slice(0, -1)
-  const currentMessageContent = messages[messages.length - 1].content
-
-  const output = await executor.invoke({
-    input: currentMessageContent,
-    previousMessages,
-    tools
-  })
-  console.log(output)
-  // return new StreamingTextResponse(stream)
-  return NextResponse.json({ output })
 }

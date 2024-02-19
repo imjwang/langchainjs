@@ -1,6 +1,6 @@
 import { StreamingTextResponse, Message } from 'ai'
 
-import { RemoteRunnable } from 'langchain/runnables/remote'
+import { RemoteRunnable } from '@langchain/core/runnables/remote'
 import { BytesOutputParser } from 'langchain/schema/output_parser'
 import { pull } from 'langchain/hub'
 import { ChatOpenAI } from 'langchain/chat_models/openai'
@@ -41,6 +41,9 @@ export async function POST(req: Request) {
   const pirateChatPrompt = await pull<ChatPromptTemplate>('jaif/piratechat')
 
   const model = new ChatOpenAI({})
+  // const model = new RemoteRunnable({
+  //   url: 'https://0fb2-34-125-33-51.ngrok-free.app/openai/stream'
+  // })
   const outputParser = new BytesOutputParser()
 
   const chain = pirateChatPrompt.pipe(model).pipe(outputParser)
@@ -53,7 +56,7 @@ export async function POST(req: Request) {
     config: { configurable: { sessionId: 1 } }
   })
 
-  const stream = await chainWithHistory.stream({
+  const stream = await model.stream({
     input: currentMessageContent
   })
 

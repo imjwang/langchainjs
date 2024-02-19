@@ -73,7 +73,6 @@ export async function POST(req: Request) {
     const splitDocumentText = splitDocs.map(({ pageContent }) => ({
       document: pageContent
     }))
-    count += splitDocumentText.length
 
     const responses = await summarizationChain.batch(splitDocumentText)
 

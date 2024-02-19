@@ -30,7 +30,7 @@ export function ChainSelect({ chain, setChain, index, setIndex, push, setPush }:
             Retrieval Augmented Chat
           </SelectItem>
           <SelectItem value="/api/agent/example">Agent Example</SelectItem>
-          {/* <SelectItem value="/api/agent">Agent</SelectItem> */}
+          <SelectItem value="/api/agent">Agent</SelectItem>
           <SelectItem value="/api/chat">Chat</SelectItem>
           <SelectItem value="/api/prompt">Prompt</SelectItem>
           <SelectItem value="/api/dynamic">Final</SelectItem>

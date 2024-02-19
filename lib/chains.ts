@@ -16,6 +16,15 @@ import { XMLParser } from 'fast-xml-parser'
 import { getExamples, createExamplesFromArray } from '@/app/langsmith-actions'
 import { BaseOutputParser } from 'langchain/schema/output_parser'
 import { RunCollectorCallbackHandler } from 'langchain/callbacks'
+import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
+import { OpenAIEmbeddings } from 'langchain/embeddings/openai'
+import { ParentDocumentRetriever } from 'langchain/retrievers/parent_document'
+import { formatDocumentsAsString } from 'langchain/util/document'
+import { TaskType } from '@google/generative-ai'
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
+import { createSupabaseClient } from '@/lib/serverUtils'
+import { SupabaseDocstore } from '@/lib/utils'
+import { SupabaseVectorStore } from 'langchain/vectorstores/supabase'
 
 // export interface XMLParserFields {
 //   fields: string;
@@ -210,4 +219,92 @@ Please output your jokes in <joke></joke> XML tags.
       id: ''
     }
   }
+}
+
+const hydeModel = new ChatOpenAI({
+  modelName: 'gpt-3.5-turbo-0125',
+  verbose: true
+})
+
+const summaryEmbeddings = new GoogleGenerativeAIEmbeddings({
+  modelName: 'embedding-001',
+  taskType: TaskType.RETRIEVAL_QUERY
+})
+
+const summaryPrompt = PromptTemplate.fromTemplate(`Question:
+{question}
+Please write a concise summary of a podcast between health professionals that addresses the question. \
+The summary should include the most important takeaways and actionable advice.
+`)
+
+async function getHydeRetriever(k: number, fetchK: number) {
+  const client = createSupabaseClient()
+  const summaryVectorstore = await SupabaseVectorStore.fromExistingIndex(
+    summaryEmbeddings,
+    {
+      client,
+      tableName: 'healthsummary', // name of my table
+      queryName: 'match_summary_documents' // name of my query function
+    }
+  )
+  return summaryVectorstore.asRetriever({
+    k,
+    searchKwargs: {
+      fetchK,
+      lambda: 0.5
+    }
+    // filter: {
+    //   source: 'huberman'
+    // }
+  })
+}
+
+export async function getHydeChain(k: number, fetchK: number) {
+  return RunnableSequence.from([
+    summaryPrompt,
+    hydeModel,
+    new StringOutputParser(),
+    async () => await getHydeRetriever(k, fetchK),
+    formatDocumentsAsString
+  ])
+}
+
+const embeddings = new OpenAIEmbeddings({
+  modelName: 'text-embedding-3-small',
+  dimensions: 1024
+})
+
+async function getParentChildRetriever(k: number, source: string = 'huberman') {
+  const client = createSupabaseClient()
+  const vectorstore = await SupabaseVectorStore.fromExistingIndex(embeddings, {
+    client,
+    tableName: 'podcasts', // name of my table
+    queryName: 'match_podcasts_documents' // name of my query function
+  })
+  //@ts-ignore
+  const docstore = new SupabaseDocstore(client, 'parent_documents') as BaseStore
+  //@ts-ignore
+  const retriever = new ParentDocumentRetriever({
+    childDocumentRetriever: vectorstore.asRetriever({
+      k: k * 2,
+      filter: {
+        source
+      }
+    }),
+    idKey: 'parent_id',
+    docstore,
+    parentK: k // because the chunks
+  })
+  return retriever
+}
+
+export async function getParentDocumentsChain(
+  k: number,
+  source: 'lex' | 'huberman'
+) {
+  return RunnableSequence.from([
+    ({ question }) => question,
+    async () => await getParentChildRetriever(k, source),
+    formatDocumentsAsString
+  ])
 }

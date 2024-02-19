@@ -1,6 +1,6 @@
 'use client'
 
-import { useChat, type Message } from 'ai/react'
+import { useChat, experimental_useAssistant as useAssistant, type Message } from 'ai/react'
 
 import { cn } from '@/lib/utils'
 import { ChatList } from '@/components/chat-list'
@@ -13,6 +13,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { useEffect, useState } from 'react'
 import { getSaveObject } from '@/lib/chains'
+
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,38 +33,52 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
   const [chain, setChain] = useState('/api/chat')
   const [index, setIndex] = useState('demo')
   const [push, setPush] = useState(false)
+  const [currentThreadId, setCurrentThreadId] = useState<string | undefined>(undefined)
   // for retrieval
   const [sourcesForMessages, setSourcesForMessages] = useState<
     Record<string, any>
   >({})
 
-  const { messages, append, reload, stop, isLoading, input, setInput } =
-    useChat({
-      api: chain,
-      initialMessages,
-      id,
-      body: {
-        id,
-        chain,
-        index,
-        pushToHub: push
-      },
-      onResponse(response) {
-        if (response.status === 401) {
-          toast.error(response.statusText)
-        }
-        const sourcesHeader = response.headers.get('x-sources')
-        const sources = sourcesHeader ? JSON.parse(atob(sourcesHeader)) : []
-        const messageIndexHeader = response.headers.get('x-message-index')
-        if (sources.length && messageIndexHeader !== null) {
-          setSourcesForMessages({
-            ...sourcesForMessages,
-            [messageIndexHeader]: sources
-          })
-        }
-      },
-      onFinish: () => setSaveChat(true)
-    })
+  // const { messages, append, reload, stop, isLoading, input, setInput } =
+  //   useChat({
+  //     api: chain,
+  //     initialMessages,
+  //     id,
+  //     body: {
+  //       id,
+  //       chain,
+  //       index,
+  //       pushToHub: push,
+  //     },
+  //     onResponse(response) {
+  //       if (response.status === 401) {
+  //         toast.error(response.statusText)
+  //       }
+  //       const sourcesHeader = response.headers.get('x-sources')
+  //       const sources = sourcesHeader ? JSON.parse(atob(sourcesHeader)) : []
+  //       const messageIndexHeader = response.headers.get('x-message-index')
+  //       if (sources.length && messageIndexHeader !== null) {
+  //         setSourcesForMessages({
+  //           ...sourcesForMessages,
+  //           [messageIndexHeader]: sources
+  //         })
+  //       }
+  //     },
+  //     onFinish: () => setSaveChat(true)
+  //   })
+
+
+  const { status, messages, input, submitMessage, handleInputChange, setInput, threadId } = useAssistant({
+    api: '/api/agent',
+    threadId: currentThreadId
+  })
+
+  useEffect(() => {
+    setCurrentThreadId(threadId)
+  }, [threadId])
+
+  const isLoading = status === 'in_progress'
+
 
   useEffect(() => {
     const t = async () => {
@@ -106,9 +121,11 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       <ChatPanel
         id={id}
         isLoading={isLoading}
-        stop={stop}
-        append={append}
-        reload={reload}
+        // stop={stop}
+        // append={append}
+        // reload={reload}
+        submitMessage={submitMessage}
+        handleInputChange={handleInputChange}
         messages={messages}
         input={input}
         setInput={setInput}
