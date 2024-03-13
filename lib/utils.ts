@@ -1,10 +1,15 @@
 import { clsx, type ClassValue } from 'clsx'
 import { customAlphabet } from 'nanoid'
 import { twMerge } from 'tailwind-merge'
-import { AIMessage, HumanMessage, SystemMessage } from 'langchain/schema'
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage
+} from '@langchain/core/messages'
 import type { Message } from 'ai'
 import { chunkArray } from '@langchain/core/utils/chunk_array'
-import { Document } from 'langchain/document'
+// import { Document } from 'langchain/document'
+import { Document } from '@langchain/core/dist/documents/document'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -242,14 +247,10 @@ export class SupabaseDocstore {
   }
 
   async mget(ids: string[]) {
-    console.log('tablename', this.tableName)
-    console.log('ids', ids)
     const { data, error } = await this.client
       .from(this.tableName)
       .select()
       .in('uid', ids)
-
-    console.log('data', data)
 
     const documents = data.map((row: any) => {
       return new Document({
@@ -631,46 +632,26 @@ export class OpenAIAssistantRunnable<
 //   });
 //   return { toolOutputs, runId, threadId } as unknown as RunInput;
 // }
-const t = [
+
+export const punJokes = [
   {
-    title: 'Creativity | Psychology Today - Definition, Sources, Tips',
-    url: 'https://www.psychologytoday.com/us/basics/creativity',
-    content:
-      'Learn how creativity involves the discovery of new and original ideas, connections, and solutions to problems. Find out the sources, steps, and benefits of creativity, as well as the links between creativity and the brain, mental health, and everyday life.',
-    score: 0.96594,
-    raw_content: null
+    joke: `Why don't animals play cards? Because there are too many cheetahs!`,
+    chainOfThought: `The user likes puns so I choose an animal pun with "cheetahs," which sounds like "cheaters." I then crafted a scenario (playing cards) where this wordplay could be humorously applied. The pun was structured as a question followed by the punchline merging the animal theme with a playful twist on language.`
   },
   {
-    title: 'Creativity: Definition, Types, Skills, & Facts - Britannica',
-    url: 'https://www.britannica.com/topic/creativity',
-    content:
-      'Creativity is the ability to make or bring into existence something new, whether a solution to a problem, a method or device, or an artistic object or form. Learn about the psychological, social, and cultural factors that influence creativity, as well as the types and skills of creative people and products. Explore examples of creative individuals and their achievements in various fields.',
-    score: 0.93387,
-    raw_content: null
+    joke: `What did the lettuce say to the celery? Lettuce romaine calm!`,
+    chainOfThought: `The user likes puns so I selected words related to vegetables that could offer wordplay potential. "Lettuce" and "romaine" were chosen for their dual meanings in "let us" and "remain". I then constructed a scenario involving another vegetable, celery, for context. The pun was structured as a playful conversation between vegetables, with "Lettuce romaine calm!" blending the names of the greens with a common phrase, adding a humorous twist.`
   },
   {
-    title: 'Creativity - Wikipedia',
-    url: 'https://en.wikipedia.org/wiki/Creativity',
-    content:
-      'Creativity is a characteristic of someone or some process that forms something new and valuable. The article explains the etymology, definition, aspects, and conceptual history of creativity in various disciplines and contexts. It also covers the factors that determine how creativity is evaluated and perceived, and the applications of creative resources to improve the effectiveness of teaching and learning.',
-    score: 0.93272,
-    raw_content: null
+    joke: `Why do programmers prefer dark mode? Because the light attracts bugs!`,
+    chainOfThought: `The user is a programmer who enjoys puns so I looked for common programming terms or concepts that could be linked humorously to everyday language. "Bugs" in programming and "bugs" in the literal sense offered a wordplay opportunity. I chose "dark mode," a familiar aspect of programming environments, as the setting. The pun was crafted as a playful explanation, with "Because the light attracts bugs!" combining a typical programmer's preference for dark mode with a humorous twist on the word "bugs," referring both to software errors and literal insects.`
   },
   {
-    title: 'Why being creative is good for you - BBC',
-    url: 'https://www.bbc.com/culture/article/20210105-why-being-creative-is-good-for-you',
-    content:
-      'Creativity is many things. It is making connections, with yourself or a great other "universal source", connections that create new ideas; it is embracing fear and the inner critic; it is staying ...',
-    score: 0.91633,
-    raw_content: null
+    joke: `What do you call an AI that sings? A-Dell!`,
+    chainOfThought: `The user wants an AI-themed pun, so I combined the world of technology (AI) with a play on a familiar name. The key element was finding a term or name that could bridge AI and another context. "A-Dell" was chosen because it sounds like "Adele," a well-known singer, while also playing on "AI," as "A" stands for 'Artificial' and "Dell" is a recognizable brand in computing. The joke asks, "What do you call an AI that sings?" setting up an expectation related to AI. The punchline "A-Dell" delivers a humorous twist by unexpectedly linking AI with singing, specifically referencing a famous singer's name, thus creating a surprising and amusing connection.`
   },
   {
-    title:
-      'The science behind creativity - American Psychological Association (APA)',
-    url: 'https://www.apa.org/monitor/2022/04/cover-science-creativity',
-    content:
-      'Psychologists and neuroscientists are exploring where creativity comes from and how to increase it in this cover story from the April 2022 issue of Monitor on Psychology. Learn about the latest research on the brain, the process, the traits and the benefits of creativity, and how to measure it in different contexts.',
-    score: 0.90119,
-    raw_content: null
+    joke: `Why did the chess game end in a draw? Because the players were too board!`,
+    chainOfThought: `The user likes puns so I choose a chess-themed pun, I combined elements of chess with a play on words. The focus was on finding a term related to chess that also has a double meaning. "Board" in chess refers to the game board, but it also sounds like "bored," meaning uninterested. The setup of the joke, "Why did the chess game end in a draw?", creates an expectation of a chess-related reason. The punchline, "Because the players were too board!", plays on the dual meanings, humorously suggesting that the game ended not for strategic reasons, but because the players were 'bored' (or 'board' in the context of chess), offering a witty twist on the scenario.`
   }
 ]

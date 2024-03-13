@@ -39,45 +39,45 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
     Record<string, any>
   >({})
 
-  // const { messages, append, reload, stop, isLoading, input, setInput } =
-  //   useChat({
-  //     api: chain,
-  //     initialMessages,
-  //     id,
-  //     body: {
-  //       id,
-  //       chain,
-  //       index,
-  //       pushToHub: push,
-  //     },
-  //     onResponse(response) {
-  //       if (response.status === 401) {
-  //         toast.error(response.statusText)
-  //       }
-  //       const sourcesHeader = response.headers.get('x-sources')
-  //       const sources = sourcesHeader ? JSON.parse(atob(sourcesHeader)) : []
-  //       const messageIndexHeader = response.headers.get('x-message-index')
-  //       if (sources.length && messageIndexHeader !== null) {
-  //         setSourcesForMessages({
-  //           ...sourcesForMessages,
-  //           [messageIndexHeader]: sources
-  //         })
-  //       }
-  //     },
-  //     onFinish: () => setSaveChat(true)
-  //   })
+  const { messages, append, reload, stop, isLoading, input, setInput } =
+    useChat({
+      api: chain,
+      initialMessages,
+      id,
+      body: {
+        id,
+        chain,
+        index,
+        pushToHub: push,
+      },
+      onResponse(response) {
+        if (response.status === 401) {
+          toast.error(response.statusText)
+        }
+        const sourcesHeader = response.headers.get('x-sources')
+        const sources = sourcesHeader ? JSON.parse(atob(sourcesHeader)) : []
+        const messageIndexHeader = response.headers.get('x-message-index')
+        if (sources.length && messageIndexHeader !== null) {
+          setSourcesForMessages({
+            ...sourcesForMessages,
+            [messageIndexHeader]: sources
+          })
+        }
+      },
+      onFinish: () => setSaveChat(true)
+    })
 
 
-  const { status, messages, input, submitMessage, handleInputChange, setInput, threadId } = useAssistant({
-    api: '/api/agent',
-    threadId: currentThreadId
-  })
+  // const { status, messages, input, submitMessage, handleInputChange, setInput, threadId } = useAssistant({
+  //   api: chain,
+  //   threadId: currentThreadId
+  // })
 
-  useEffect(() => {
-    setCurrentThreadId(threadId)
-  }, [threadId])
+  // useEffect(() => {
+  //   setCurrentThreadId(threadId)
+  // }, [threadId])
 
-  const isLoading = status === 'in_progress'
+  // const isLoading = status === 'in_progress'
 
 
   useEffect(() => {
@@ -121,11 +121,13 @@ export function Chat({ id, initialMessages, className }: ChatProps) {
       <ChatPanel
         id={id}
         isLoading={isLoading}
-        // stop={stop}
-        // append={append}
-        // reload={reload}
-        submitMessage={submitMessage}
-        handleInputChange={handleInputChange}
+        stop={stop}
+        append={append}
+        reload={reload}
+        // submitMessage={submitMessage}
+        // submitMessage={submitMessage}
+        // handleInputChange={handleInputChange}
+        handleInputChange={setInput}
         messages={messages}
         input={input}
         setInput={setInput}

@@ -11,11 +11,11 @@ import { getSaveObject } from '@/lib/chains'
 export interface ChatPanelProps
   extends Pick<
     UseChatHelpers,
-    // | 'append'
+    | 'append'
     | 'isLoading'
-    // | 'reload'
+    | 'reload'
     | 'messages'
-    // | 'stop'
+    | 'stop'
     | 'input'
     | 'setInput'
   > {
@@ -33,9 +33,9 @@ export interface ChatPanelProps
 export function ChatPanel({
   id,
   isLoading,
-  // stop,
-  // append,
-  // reload,
+  stop,
+  append,
+  reload,
   input,
   setInput,
   messages,
@@ -56,7 +56,7 @@ export function ChatPanel({
           {isLoading ? (
             <Button
               variant="outline"
-              // onClick={() => stop()}
+              onClick={() => stop()}
               className="bg-background"
             >
               <IconStop className="mr-2" />
@@ -66,7 +66,7 @@ export function ChatPanel({
             messages?.length > 0 && (
               <Button
                 variant="outline"
-                // onClick={() => reload()}
+                onClick={() => reload()}
                 className="bg-background"
               >
                 <IconRefresh className="mr-2" />
@@ -85,9 +85,16 @@ export function ChatPanel({
             setPush={setPush}
           />
           <PromptForm
-            onSubmit={submitMessage}
+            // onSubmit={submitMessage}
+            onSubmit={async value => {
+              await append({
+                id,
+                content: value,
+                role: 'user'
+              })
+            }}
             input={input}
-            handleInputChange={handleInputChange}
+            // handleInputChange={handleInputChange}
             setInput={setInput}
             isLoading={isLoading}
           />

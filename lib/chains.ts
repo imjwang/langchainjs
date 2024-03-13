@@ -222,8 +222,7 @@ Please output your jokes in <joke></joke> XML tags.
 }
 
 const hydeModel = new ChatOpenAI({
-  modelName: 'gpt-3.5-turbo-0125',
-  verbose: true
+  modelName: 'gpt-3.5-turbo-0125'
 })
 
 const summaryEmbeddings = new GoogleGenerativeAIEmbeddings({
