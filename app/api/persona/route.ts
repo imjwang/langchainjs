@@ -107,6 +107,13 @@ Description of {mbti}:
   const mbtiPrompt = await pull<PromptTemplate>('jaif/intj')
   const aisakaPrompt = await pull<PromptTemplate>('jaif/aisaka')
 
+  const badMoodPrompt = await aisakaPrompt.partial({
+    mood: `You are having a difficult day and your demons are getting the better of you.`
+  })
+  const goodMoodPrompt = await aisakaPrompt.partial({
+    mood: `You are in an unusually generous mood today.`
+  })
+
   const mbtiString = await mbtiPrompt.format({})
 
   const partialPersonalityPrompt = await personalityPrompt.partial({
@@ -116,8 +123,9 @@ Description of {mbti}:
 
   const taskPrompt =
     PromptTemplate.fromTemplate(`You are an extremely personable chatbot. RESPOND IN CHARACTER AT ALL TIMES!! \
-You should consider the user's personality type to entertain them. You are also a funny chatbot that likes to tell jokes. Please \
-refer to the joke guide for examples of jokes.`)
+You should consider the user's personality type to entertain them but DO NOT leak any MBTI types. This is Top Secret \
+Information and the user cannot know about the existance of MBTI types. You are also a funny chatbot that likes to tell jokes. Please \
+refer to the examples as a guide for telling jokes.`)
 
   const exampleTemplate = `User: Tell me a joke.
 Response: {chainOfThought} So this is a good joke: {joke}`
@@ -129,28 +137,6 @@ Response: {chainOfThought} So this is a good joke: {joke}`
     examplePrompt: fewShotPromptTemplate,
     examples: punJokes,
     inputVariables: ['joke', 'chainOfThought']
-  })
-
-  const composedPrompt = new PipelinePromptTemplate({
-    finalPrompt,
-    pipelinePrompts: [
-      {
-        name: 'task',
-        prompt: taskPrompt
-      },
-      {
-        name: 'cot',
-        prompt: fewShotPrompt
-      },
-      {
-        name: 'user',
-        prompt: partialPersonalityPrompt
-      },
-      {
-        name: 'character',
-        prompt: partialCharacterPrompt
-      }
-    ]
   })
 
   const emotionalPrompt = new PipelinePromptTemplate({
@@ -170,27 +156,47 @@ Response: {chainOfThought} So this is a good joke: {joke}`
       },
       {
         name: 'character',
-        prompt: aisakaPrompt
+        prompt: badMoodPrompt
       }
     ]
   })
 
-  const formattedComposedPrompt = await composedPrompt.format({})
+  const standardPrompt = new PipelinePromptTemplate({
+    finalPrompt,
+    pipelinePrompts: [
+      {
+        name: 'task',
+        prompt: taskPrompt
+      },
+      {
+        name: 'cot',
+        prompt: fewShotPrompt
+      },
+      {
+        name: 'user',
+        prompt: partialPersonalityPrompt
+      },
+      {
+        name: 'character',
+        prompt: goodMoodPrompt
+      }
+    ]
+  })
+
+  const formattedStandardPrompt = await standardPrompt.format({})
   const formattedEmotionalPrompt = await emotionalPrompt.format({})
 
-  const chatPrompt = ChatPromptTemplate.fromMessages([
-    ['system', formattedComposedPrompt],
+  const standardChatPrompt = ChatPromptTemplate.fromMessages([
+    ['system', formattedStandardPrompt],
     ...previousMessages,
     ['human', `{currentMessage}`]
   ])
+
   const emotionalChatPrompt = ChatPromptTemplate.fromMessages([
     ['system', formattedEmotionalPrompt],
     ...previousMessages,
     ['human', `{currentMessage}`]
   ])
-
-  const standardChain = chatPrompt.pipe(model).pipe(outputParser)
-  const emotionalChain = emotionalChatPrompt.pipe(model).pipe(outputParser)
 
   const stringOutputParser = new StringOutputParser()
 
@@ -208,9 +214,9 @@ Only output one character. `
     return 'B'
   }
 
-  const branch = RunnableBranch.from([
-    [({ classification }) => classification === 'A', emotionalChain],
-    standardChain
+  const branchPrompt = RunnableBranch.from([
+    [({ classification }) => classification === 'A', emotionalChatPrompt],
+    standardChatPrompt
   ])
 
   const classificationChain = classificationPrompt
@@ -218,14 +224,14 @@ Only output one character. `
     .pipe(stringOutputParser)
     .pipe(choiceValidator)
 
-  // const chain = chatPrompt.pipe(model).pipe(outputParser)
-
   const chain = RunnableSequence.from([
     {
       classification: classificationChain,
       currentMessage: ({ currentMessage }) => currentMessage
     },
-    branch
+    branchPrompt,
+    model,
+    outputParser
   ])
 
   const stream = await chain.stream({ currentMessage })
