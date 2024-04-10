@@ -25,6 +25,8 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 import { createSupabaseClient } from '@/lib/serverUtils'
 import { SupabaseDocstore } from '@/lib/utils'
 import { SupabaseVectorStore } from 'langchain/vectorstores/supabase'
+import { ChatAnthropic } from '@langchain/anthropic'
+import { XMLOutputParser } from '@langchain/core/output_parsers'
 
 // export interface XMLParserFields {
 //   fields: string;

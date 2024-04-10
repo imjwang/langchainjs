@@ -2,45 +2,44 @@
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Separator } from '@/components/ui/separator'
 import { useState, useEffect } from 'react'
 import {
   createExample,
   getExamples,
   handleFeedback,
-  getDatasetStatus,
-  jokesDatasetToJSONL
+  getDataset,
+  jokesDatasetToJSONL,
+  getJokes,
+  testEval,
+  runEvaluation
 } from '@/app/langsmith-actions'
 import { type Dataset } from 'langsmith'
 import { useFormState } from 'react-dom'
-import { createJokes } from '@/lib/chains'
+import { generateJokes } from '@/lib/chains/jokes'
 import toast from 'react-hot-toast'
 
 type JokeRaterProps = {
-  jokesDatasetId: string | undefined
-  flopsDatasetId: string | undefined
-  checkDataset: () => void
+  datasetName: string | undefined
 }
 
 function JokeRater({
-  jokesDatasetId,
-  flopsDatasetId,
-  checkDataset
+  datasetName,
 }: JokeRaterProps) {
-  const [currentIdx, setCurrentIdx] = useState(1)
-  const [runId, setRunId] = useState<string>('')
+  const [currentIdx, setCurrentIdx] = useState(0)
   const [jokes, setJokes] = useState<string[] | undefined>(undefined)
+  const [reasons, setReasons] = useState<string[] | undefined>(undefined)
   const [loading, setLoading] = useState(false)
 
   const handleCreateJokes = async () => {
-    checkDataset()
+    setCurrentIdx(0)
     setLoading(true)
-    const { message, jokes, id } = await createJokes(jokesDatasetId)
-    if (message !== 'ok') {
-      toast(message)
-      return
-    }
-    setRunId(id!)
+    const response = await generateJokes('5')
+    const jokes = response.reduce((acc, val) => acc.concat(val.response.joke), [])
     setJokes(jokes)
+    const reasons = response.reduce((acc, val) => acc.concat(val.response.reason), [])
+    setReasons(reasons)
     setLoading(false)
   }
 
@@ -69,30 +68,31 @@ function JokeRater({
   }
 
   const increment = () => {
+    setJokes(prev => prev!.slice(1))
+    setReasons(prev => prev!.slice(1))
     setCurrentIdx(currentIdx + 1)
-    setJokes(prev => prev!.slice(0, -1))
   }
 
   const handleVote = async () => {
-    increment()
-    const res = await handleFeedback(
-      runId,
-      jokes[jokes.length - 1],
-      jokesDatasetId,
-      'lol'
-    )
+    // todo replace with createExample
+    const formData = new FormData()
+    formData.append("joke", jokes[0])
+    formData.append("reason", reasons[0])
+    formData.append("rating", "funny")
+    const res = await createExample(datasetName, null, formData)
     if (res.message === 'error') toast('Upload to dataset failed.')
+    increment()
   }
 
-  const handleTrash = async () => {
-    increment()
-    const res = await handleFeedback(
-      runId,
-      jokes[jokes.length - 1],
-      flopsDatasetId,
-      'chirps'
-    )
+  const handleReject = async () => {
+    // todo replace with createExample
+    const formData = new FormData()
+    formData.append("joke", jokes[0])
+    formData.append("reason", reasons[0])
+    formData.append("rating", "flop")
+    const res = await createExample(datasetName, null, formData)
     if (res.message === 'error') toast('Upload to dataset failed.')
+    increment()
   }
 
   const handleSkip = () => {
@@ -102,16 +102,16 @@ function JokeRater({
   return (
     <div className="p-6">
       <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-        Joke #{currentIdx}
+        Joke #{currentIdx + 1}
       </h3>
       <ul>
-        <li>{jokes[jokes.length - 1]}</li>
+        <li>{jokes[0]}</li>
         <div className="flex justify-between w-1/2 mt-2">
-          {flopsDatasetId && <Button onClick={handleTrash}>Trash</Button>}
           <Button variant="outline" onClick={handleSkip}>
             Skip
           </Button>
           <Button onClick={handleVote}>Upvote</Button>
+          <Button onClick={handleReject}>Downvote</Button>
         </div>
       </ul>
     </div>
@@ -122,11 +122,9 @@ const initialState = {
   message: ''
 }
 
-export function JokeDatasetManager() {
-  const [jokesDataset, setJokesDataset] = useState<Dataset | null>(null)
-  const [flopsDataset, setFlopsDataset] = useState<Dataset | null>(null)
+export function JokeDatasetManager({ dataset }: { dataset: Dataset | null }) {
 
-  const datasetName = jokesDataset?.name
+  const datasetName = dataset?.name
   const createExampleWithDatasetName = createExample.bind(null, datasetName)
 
   const [state, formAction] = useFormState(
@@ -134,15 +132,8 @@ export function JokeDatasetManager() {
     initialState
   )
 
-  async function checkDataset() {
-    const jokesDatasetStatus = await getDatasetStatus('jokes')
-    const flopsDatasetStatus = await getDatasetStatus('flops')
-    setJokesDataset(jokesDatasetStatus)
-    setFlopsDataset(flopsDatasetStatus)
-  }
-
-  const handleClickMe = async () => {
-    const jsonlString = await jokesDatasetToJSONL(jokesDataset?.id)
+  const handleDownload = async () => {
+    const jsonlString = await jokesDatasetToJSONL(dataset?.id)
     if (!jsonlString) {
       toast('failed')
       return
@@ -161,9 +152,10 @@ export function JokeDatasetManager() {
     URL.revokeObjectURL(url)
   }
 
-  useEffect(() => {
-    checkDataset()
-  }, [])
+  const handleEval = async () => {
+    await runEvaluation(datasetName)
+  }
+
 
   return (
     <div className="p-4">
@@ -176,6 +168,23 @@ export function JokeDatasetManager() {
             Create Joke Form
           </h3>
           <Input type="text" name="joke" placeholder="Joke" />
+          <div>
+            <div className='flex justify-between'>
+              <div>
+                <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
+                  Reasoning
+                </h4>
+                <p className="leading-7">
+                  Enter reasoning for why the joke is funny.
+                </p>
+              </div>
+              {/* <Button className="bg-yellow-400 self-end">Generate</Button> */}
+            </div>
+            <Textarea name="reason" className="mt-1.5" placeholder="..." />
+          </div>
+          <Input type='text' name="rating" readOnly value="funny" className="hidden" />
+          <Input type='datasetName' name={datasetName} readOnly value="funny" className="hidden" />
+          <Separator />
           <Button className="w-36" type="submit">
             Create Example
           </Button>
@@ -183,13 +192,16 @@ export function JokeDatasetManager() {
             <b>Last Result:</b> {state.message}
           </p>
         </form>
-        <Button className="ml-2" onClick={handleClickMe}>
-          Download finetune dataset
-        </Button>
+        <div>
+          <Button className="ml-2" onClick={handleEval}>
+            Run evaluation
+          </Button>
+          <Button className="ml-2" onClick={handleDownload}>
+            Download finetune dataset
+          </Button>
+        </div>
         <JokeRater
-          jokesDatasetId={jokesDataset?.id}
-          flopsDatasetId={flopsDataset?.id}
-          checkDataset={checkDataset}
+          datasetName={datasetName}
         />
       </div>
     </div>

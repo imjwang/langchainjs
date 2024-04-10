@@ -1,4 +1,4 @@
-import { getDatasetStatus } from '@/app/langsmith-actions'
+import { getDataset } from '@/app/langsmith-actions'
 import { Client, type Dataset } from 'langsmith'
 import { DatasetControls } from './dataset-controls'
 
@@ -32,18 +32,16 @@ function Dataset({ dataset = null }: DatasetProps) {
 }
 
 type DatasetVisualizerProps = {
-  datasetName: string
+  dataset: Dataset | null
 }
 
 export async function DatasetVisualizer({
-  datasetName
+  dataset
 }: DatasetVisualizerProps) {
-  const dataset = await getDatasetStatus(datasetName)
-
   return (
     <>
       <Dataset dataset={dataset} key={dataset?.id} />
-      <DatasetControls initialDataset={dataset} datasetName={datasetName} />
+      <DatasetControls initialDataset={dataset} datasetName={dataset?.name} />
     </>
   )
 }

@@ -1,9 +1,9 @@
 import { StreamingTextResponse, Message } from 'ai'
 
 import { RemoteRunnable } from '@langchain/core/runnables/remote'
-import { BytesOutputParser } from 'langchain/schema/output_parser'
+import { BytesOutputParser } from '@langchain/core/output_parsers'
 import { pull } from 'langchain/hub'
-import { ChatOpenAI } from 'langchain/chat_models/openai'
+import { ChatOpenAI } from '@langchain/openai'
 import {
   ChatPromptTemplate,
   MessagesPlaceholder,
@@ -33,40 +33,44 @@ export async function POST(req: Request) {
 
   const { messages, pushToHub } = await req.json()
 
-  const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage)
+  // const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage)
   const currentMessageContent = messages[messages.length - 1].content
 
-  const memory = new ChatMessageHistory(formattedPreviousMessages)
+  // const memory = new ChatMessageHistory(formattedPreviousMessages)
 
-  const pirateChatPrompt = await pull<ChatPromptTemplate>('jaif/piratechat')
+  // const pirateChatPrompt = await pull<ChatPromptTemplate>('jaif/piratechat')
 
-  const model = new ChatOpenAI({})
+  const model = new ChatOpenAI({
+    modelName: 'ft:gpt-3.5-turbo-0125:jwai:jokes:96iQGgGX'
+  })
   // const model = new RemoteRunnable({
   //   url: 'https://0fb2-34-125-33-51.ngrok-free.app/openai/stream'
   // })
   const outputParser = new BytesOutputParser()
 
-  const chain = pirateChatPrompt.pipe(model).pipe(outputParser)
+  const prompt = PromptTemplate.fromTemplate(`{input}`)
 
-  const chainWithHistory = new RunnableWithMessageHistory({
-    runnable: chain,
-    getMessageHistory: () => memory,
-    inputMessagesKey: 'input',
-    historyMessagesKey: 'history',
-    config: { configurable: { sessionId: 1 } }
-  })
+  const chain = prompt.pipe(model).pipe(outputParser)
 
-  const stream = await model.stream({
+  // const chainWithHistory = new RunnableWithMessageHistory({
+  //   runnable: chain,
+  //   getMessageHistory: () => memory,
+  //   inputMessagesKey: 'input',
+  //   historyMessagesKey: 'history',
+  //   config: { configurable: { sessionId: 1 } }
+  // })
+
+  const stream = await chain.stream({
     input: currentMessageContent
   })
 
-  if (pushToHub) {
-    try {
-      await push('jaif/piratechat', pirateChatPrompt)
-    } catch (e) {
-      console.log(e)
-    }
-  }
+  // if (pushToHub) {
+  //   try {
+  //     await push('jaif/piratechat', pirateChatPrompt)
+  //   } catch (e) {
+  //     console.log(e)
+  //   }
+  // }
 
   return new StreamingTextResponse(stream)
 }

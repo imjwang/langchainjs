@@ -1,13 +1,14 @@
 import { JokeDatasetManager } from '@/components/joke-dataset-manager'
 import { DatasetVisualizer } from '@/components/dataset-viz'
+import { getDataset } from '../langsmith-actions'
 
-export default function JokesPage() {
+export default async function JokesPage() {
+  const dataset = await getDataset('jokes')
   return (
     <>
-      <JokeDatasetManager />
+      <JokeDatasetManager dataset={dataset} />
       <div className="flex flex-col gap-2 p-4">
-        <DatasetVisualizer datasetName="jokes" />
-        <DatasetVisualizer datasetName="flops" />
+        <DatasetVisualizer dataset={dataset} />
       </div>
     </>
   )

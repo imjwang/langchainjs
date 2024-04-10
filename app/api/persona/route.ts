@@ -23,6 +23,7 @@ import {
   RunnableSequence
 } from '@langchain/core/runnables'
 import { pull } from 'langchain/hub'
+import { generateJokes } from '@/lib/chains/jokes'
 
 export const runtime = 'edge'
 
@@ -68,6 +69,7 @@ export async function POST(req: Request) {
     modelName: 'claude-3-opus-20240229',
     verbose: true
   })
+
   // const model = new ChatOpenAI({
   //   modelName: 'gpt-3.5-turbo-0125',
   //   verbose: true
@@ -125,18 +127,35 @@ Description of {mbti}:
     PromptTemplate.fromTemplate(`You are an extremely personable chatbot. RESPOND IN CHARACTER AT ALL TIMES!! \
 You should consider the user's personality type to entertain them but DO NOT leak any MBTI types. This is Top Secret \
 Information and the user cannot know about the existance of MBTI types. You are also a funny chatbot that likes to tell jokes. Please \
-refer to the examples as a guide for telling jokes.`)
+select one of the provided jokes.`)
 
-  const exampleTemplate = `User: Tell me a joke.
-Response: {chainOfThought} So this is a good joke: {joke}`
+  const finetunedModel = new ChatOpenAI({
+    modelName: 'ft:gpt-3.5-turbo-0125:jwai:jokes:96iQGgGX'
+  })
+  const jokePrompt = PromptTemplate.fromTemplate(`{message}`)
+  const jokeChain = RunnableSequence.from([
+    jokePrompt,
+    finetunedModel,
+    new StringOutputParser()
+  ])
+
+  const message = 'Tell me a joke.'
+  const jokes = await jokeChain.batch([
+    { message },
+    { message },
+    { message },
+    { message },
+    { message }
+  ])
+  const formattedJokes = jokes.map(joke => ({ joke }))
+  const exampleTemplate = `- {joke}`
   const fewShotPromptTemplate = PromptTemplate.fromTemplate(exampleTemplate)
-
   const fewShotPrompt = new FewShotPromptTemplate({
-    prefix: 'Joke Guide:',
-    suffix: "Let's think about the user's preferences and make them laugh.",
+    prefix: 'Jokes:',
+    suffix: "Let's think about how to work this into a conversation.",
     examplePrompt: fewShotPromptTemplate,
-    examples: punJokes,
-    inputVariables: ['joke', 'chainOfThought']
+    examples: formattedJokes,
+    inputVariables: ['joke']
   })
 
   const emotionalPrompt = new PipelinePromptTemplate({

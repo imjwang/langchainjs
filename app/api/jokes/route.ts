@@ -30,7 +30,7 @@ import { BedrockChat } from 'langchain/chat_models/bedrock'
 import { BedrockAnthropicChat } from '@/lib/models'
 import { FewShotPromptTemplate } from 'langchain/prompts'
 import { Client } from 'langsmith'
-import { getExamples, getDatasetStatus } from '@/app/langsmith-actions'
+import { getExamples, getDataset } from '@/app/langsmith-actions'
 
 const client = new Client()
 // export const runtime = 'edge'
@@ -61,7 +61,7 @@ A: <flop>{flop}</flop>
   //   {joke: "Knock knock. Who's there? Lettuce. Lettuce who? Lettuce in, it's cold out here!"},
   // ]
 
-  const jokesDataset = await getDatasetStatus('jokes')
+  const jokesDataset = await getDataset('jokes')
   const jokesExamples = await getExamples(jokesDataset?.id)
 
   const formattedJokes = jokesExamples.map(j => ({ joke: j }))
@@ -79,7 +79,7 @@ A: <flop>{flop}</flop>
     suffix: `\n`
   })
 
-  const flopsDataset = await getDatasetStatus('flops')
+  const flopsDataset = await getDataset('flops')
   const flopsExamples = await getExamples(flopsDataset?.id)
 
   const formattedFlops = flopsExamples.map(j => ({ flop: j }))
